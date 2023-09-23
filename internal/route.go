@@ -685,4 +685,5 @@ func (b *BrokerData) SelectBrokerAddr() string {
 			}
 		}
 	}
+	return ""
 }

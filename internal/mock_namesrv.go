@@ -100,6 +100,10 @@ func (m *MockNamesrvs) UpdateTopicRouteInfo(topic string) (*TopicRouteData, bool
 	return ret0, ret1, ret2
 }
 
+func (m *MockNamesrvs) FindRouteInfoByTopic(topic string) (*TopicRouteData, error) {
+	return nil
+}
+
 // UpdateTopicRouteInfo indicates an expected call of UpdateTopicRouteInfo
 func (mr *MockNamesrvsMockRecorder) UpdateTopicRouteInfo(topic interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
