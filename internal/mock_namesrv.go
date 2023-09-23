@@ -101,7 +101,7 @@ func (m *MockNamesrvs) UpdateTopicRouteInfo(topic string) (*TopicRouteData, bool
 }
 
 func (m *MockNamesrvs) FindRouteInfoByTopic(topic string) (*TopicRouteData, error) {
-	return nil
+	return nil, nil
 }
 
 // UpdateTopicRouteInfo indicates an expected call of UpdateTopicRouteInfo
