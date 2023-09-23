@@ -18,10 +18,10 @@ limitations under the License.
 package consumer
 
 import (
-	"github.com/apache/rocketmq-client-go/v2/rlog"
+	"github.com/slh92/rocketmq-admin/rlog"
 	"testing"
 
-	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/slh92/rocketmq-admin/primitive"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

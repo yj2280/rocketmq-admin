@@ -1,4 +1,4 @@
-module github.com/apache/rocketmq-client-go/v2
+module github.com/slh92/rocketmq-admin
 
 go 1.13
 

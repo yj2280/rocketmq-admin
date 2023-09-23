@@ -19,7 +19,7 @@ package internal
 
 import (
 	"context"
-	"github.com/apache/rocketmq-client-go/v2/errors"
+	"github.com/slh92/rocketmq-admin/errors"
 	"sync"
 	"testing"
 
@@ -27,8 +27,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/apache/rocketmq-client-go/v2/internal/remote"
-	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/slh92/rocketmq-admin/internal/remote"
+	"github.com/slh92/rocketmq-admin/primitive"
 )
 
 func TestQueryTopicRouteInfoFromServer(t *testing.T) {

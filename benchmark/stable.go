@@ -19,8 +19,8 @@ package main
 
 import (
 	"flag"
-	"github.com/apache/rocketmq-client-go/v2/errors"
-	"github.com/apache/rocketmq-client-go/v2/rlog"
+	"github.com/slh92/rocketmq-admin/errors"
+	"github.com/slh92/rocketmq-admin/rlog"
 	"os"
 	"os/signal"
 	"syscall"

@@ -26,8 +26,8 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 
-	"github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/apache/rocketmq-client-go/v2/rlog"
+	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/slh92/rocketmq-admin/rlog"
 )
 
 var RequestResponseFutureMap = NewRequestResponseFutureMap()

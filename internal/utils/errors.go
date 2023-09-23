@@ -18,7 +18,7 @@ limitations under the License.
 package utils
 
 import (
-	"github.com/apache/rocketmq-client-go/v2/rlog"
+	"github.com/slh92/rocketmq-admin/rlog"
 )
 
 func CheckError(action string, err error) {

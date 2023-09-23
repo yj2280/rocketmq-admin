@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/rocketmq-client-go/v2/internal"
-	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/slh92/rocketmq-admin/internal"
+	"github.com/slh92/rocketmq-admin/primitive"
 )
 
 func defaultProducerOptions() producerOptions {

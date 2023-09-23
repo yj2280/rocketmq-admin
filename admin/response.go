@@ -19,9 +19,9 @@ package admin
 
 import (
 	"encoding/json"
-	"github.com/apache/rocketmq-client-go/v2/internal"
-	"github.com/apache/rocketmq-client-go/v2/internal/remote"
-	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/slh92/rocketmq-admin/internal"
+	"github.com/slh92/rocketmq-admin/internal/remote"
+	"github.com/slh92/rocketmq-admin/primitive"
 )
 
 type ConsumeType string

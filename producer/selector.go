@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/slh92/rocketmq-admin/primitive"
 )
 
 type QueueSelector interface {
