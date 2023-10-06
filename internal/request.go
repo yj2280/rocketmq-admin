@@ -650,3 +650,29 @@ func (request *ReplyMessageRequestHeader) Decode(properties map[string]string) {
 		request.storeTimestamp, _ = strconv.ParseInt(v, 10, 0)
 	}
 }
+
+type GetConsumerRunningInfoRequestHeader struct {
+	ConsumerGroup string
+	ClientId      string
+	JstackEnable  bool
+}
+
+func (request *GetConsumerRunningInfoRequestHeader) Encode() map[string]string {
+	return map[string]string{
+		"clientId":      request.ClientId,
+		"consumerGroup": request.ConsumerGroup,
+		"jstackEnable":  strconv.FormatBool(request.JstackEnable),
+	}
+}
+func (request *GetConsumerRunningInfoRequestHeader) Decode(properties map[string]string) {
+	if v, existed := properties["clientId"]; existed {
+		request.ClientId = v
+	}
+
+	if v, existed := properties["consumerGroup"]; existed {
+		request.ConsumerGroup = v
+	}
+	if v, existed := properties["jstackEnable"]; existed {
+		request.JstackEnable, _ = strconv.ParseBool(v)
+	}
+}

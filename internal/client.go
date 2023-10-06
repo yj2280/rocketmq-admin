@@ -1006,7 +1006,7 @@ func routeData2SubscribeInfo(topic string, data *TopicRouteData) []*primitive.Me
 	return list
 }
 
-func brokerVIPChannel(brokerAddr string) string {
+func BrokerVIPChannel(brokerAddr string) string {
 	if !_VIPChannelEnable {
 		return brokerAddr
 	}

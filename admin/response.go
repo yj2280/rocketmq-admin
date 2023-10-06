@@ -19,9 +19,13 @@ package admin
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/slh92/rocketmq-admin/internal"
 	"github.com/slh92/rocketmq-admin/internal/remote"
 	"github.com/slh92/rocketmq-admin/primitive"
+	"math"
+	"regexp"
+	"strings"
 )
 
 type ConsumeType string
@@ -42,6 +46,7 @@ const (
 )
 
 type RemotingSerializable struct {
+	ObjToKey bool `json:"-"`
 }
 
 func (r *RemotingSerializable) Encode(obj interface{}) ([]byte, error) {
@@ -69,15 +74,62 @@ func (r *RemotingSerializable) ToJson(obj interface{}, prettyFormat bool) string
 }
 func (r *RemotingSerializable) Decode(data []byte, classOfT interface{}) (interface{}, error) {
 	jsonStr := string(data)
+	fmt.Println(jsonStr)
 	return r.FromJson(jsonStr, classOfT)
 }
 
 func (r *RemotingSerializable) FromJson(jsonStr string, classOfT interface{}) (interface{}, error) {
-	err := json.Unmarshal([]byte(jsonStr), classOfT)
+	jsonStr, err := r.updateNoValidJson(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr, err = r.strObjectJson(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(jsonStr), classOfT)
 	if err != nil {
 		return nil, err
 	}
 	return classOfT, nil
+}
+
+func (r *RemotingSerializable) updateNoValidJson(jsonStr string) (string, error) {
+	// 匹配不符合JSON规范的键
+	re := regexp.MustCompile(`(?m)(([{,]\s*)(\d+):)`)
+
+	// 替换不符合规范的键为带双引号的键
+	validJSONStr := re.ReplaceAllStringFunc(jsonStr, func(match string) string {
+		// 取出匹配的键
+		re2 := regexp.MustCompile(`(?m)(\d+)`)
+		match2 := re2.ReplaceAllStringFunc(match, func(key string) string {
+			return fmt.Sprintf(`"%s"`, key)
+		})
+		//key=strings.TrimPrefix(key,",")
+		return match2
+	})
+	return validJSONStr, nil
+}
+
+func (r *RemotingSerializable) strObjectJson(jsonStr string) (string, error) {
+	// 匹配不符合JSON规范的键
+	re := regexp.MustCompile(`(?m)(([{,]\s*)(\{[^{}]*\}):)`)
+	r.ObjToKey = re.Match([]byte(jsonStr))
+	if !r.ObjToKey {
+		return jsonStr, nil
+	}
+
+	// 替换不符合规范的键为带双引号的键
+	validJSONStr := re.ReplaceAllStringFunc(jsonStr, func(match string) string {
+		// 取出匹配的键
+		re2 := regexp.MustCompile(`(?m)(\{[^{}]*\})`)
+		match2 := re2.ReplaceAllStringFunc(match, func(key string) string {
+			key = strings.ReplaceAll(key, "\"", "\\\"")
+			return fmt.Sprintf(`"%s"`, key)
+		})
+		return match2
+	})
+	return validJSONStr, nil
 }
 
 type TopicList struct {
@@ -157,14 +209,14 @@ type GroupConsumeInfo struct {
 }
 
 type ClusterInfo struct {
-	BrokerAddrTable  map[string]*internal.BrokerData
-	ClusterAddrTable map[string][]string
+	BrokerAddrTable  map[string]*internal.BrokerData `json:"brokerAddrTable"`
+	ClusterAddrTable map[string][]string             `json:"clusterAddrTable"`
 	RemotingSerializable
 }
 
 type ConsumeStats struct {
-	OffsetTable map[*primitive.MessageQueue]*OffsetWrapper
-	ConsumeTps  float64
+	OffsetTable map[*primitive.MessageQueue]*OffsetWrapper `json:"-"`
+	ConsumeTps  float64                                    `json:"consumeTps"`
 	RemotingSerializable
 }
 
@@ -181,4 +233,39 @@ type OffsetWrapper struct {
 	BrokerOffset   int64
 	ConsumerOffset int64
 	LastTimestamp  int64
+}
+
+type TopicConsumerInfo struct {
+	Topic             string
+	DiffTotal         int64
+	LastTimestamp     int64
+	QueueStatInfoList []*QueueStatInfo
+}
+
+func (t *TopicConsumerInfo) AppendQueueStatInfo(queueStat *QueueStatInfo) {
+	t.QueueStatInfoList = append(t.QueueStatInfoList, queueStat)
+	t.DiffTotal = t.DiffTotal + (queueStat.BrokerOffset - queueStat.ConsumerOffset)
+	t.LastTimestamp = int64(math.Max(float64(t.LastTimestamp), float64(queueStat.LastTimestamp)))
+}
+
+type QueueStatInfo struct {
+	BrokerName     string
+	QueueId        int
+	BrokerOffset   int64
+	ConsumerOffset int64
+	ClientInfo     string
+	LastTimestamp  int64
+}
+
+func (q *QueueStatInfo) FromOffsetTableEntry(key *primitive.MessageQueue, value *OffsetWrapper) {
+	q.BrokerName = key.BrokerName
+	q.QueueId = key.QueueId
+	q.BrokerOffset = value.BrokerOffset
+	q.ConsumerOffset = value.ConsumerOffset
+	q.LastTimestamp = value.LastTimestamp
+}
+
+type AdminConsumerRunningInfo struct {
+	*internal.ConsumerRunningInfo
+	RemotingSerializable
 }
