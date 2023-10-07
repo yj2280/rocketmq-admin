@@ -335,7 +335,7 @@ func GetOrNewRocketMQClient(option ClientOptions, callbackCh chan interface{}) R
 			body := new(ResetOffsetBody)
 			body.Decode(req.Body)
 
-			client.resetOffset(header.topic, header.group, body.OffsetTable)
+			client.resetOffset(header.Topic, header.Group, body.OffsetTable)
 			return nil
 		})
 

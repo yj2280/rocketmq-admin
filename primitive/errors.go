@@ -43,19 +43,24 @@ func (e *RemotingErr) Error() string {
 }
 
 func NewMQClientErr(code int16, msg string) error {
-	return &MQClientErr{code: code, msg: msg}
+	return &MQClientErr{Code: code, Msg: msg}
 }
 
 type MQClientErr struct {
-	code int16
-	msg  string
+	Code int16
+	Msg  string
 }
 
 func (e MQClientErr) Error() string {
-	return "CODE: " + strconv.Itoa(int(e.code)) + "  DESC: " + e.msg
+	return "CODE: " + strconv.Itoa(int(e.Code)) + "  DESC: " + e.Msg
 }
 
 func IsRemotingErr(err error) bool {
 	_, ok := err.(*RemotingErr)
+	return ok
+}
+
+func IsMQClientErr(err error) bool {
+	_, ok := err.(*MQClientErr)
 	return ok
 }

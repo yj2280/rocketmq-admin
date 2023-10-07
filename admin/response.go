@@ -18,14 +18,10 @@ limitations under the License.
 package admin
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/slh92/rocketmq-admin/internal"
 	"github.com/slh92/rocketmq-admin/internal/remote"
 	"github.com/slh92/rocketmq-admin/primitive"
 	"math"
-	"regexp"
-	"strings"
 )
 
 type ConsumeType string
@@ -44,93 +40,6 @@ const (
 	CONSUME_FROM_FIRST_OFFSET                             = ConsumeFromWhere("CONSUME_FROM_FIRST_OFFSET")
 	CONSUME_FROM_TIMESTAMP                                = ConsumeFromWhere("CONSUME_FROM_TIMESTAMP")
 )
-
-type RemotingSerializable struct {
-	ObjToKey bool `json:"-"`
-}
-
-func (r *RemotingSerializable) Encode(obj interface{}) ([]byte, error) {
-	jsonStr := r.ToJson(obj, false)
-	if jsonStr != "" {
-		return []byte(jsonStr), nil
-	}
-	return nil, nil
-}
-
-func (r *RemotingSerializable) ToJson(obj interface{}, prettyFormat bool) string {
-	if prettyFormat {
-		jsonBytes, err := json.MarshalIndent(obj, "", "  ")
-		if err != nil {
-			return ""
-		}
-		return string(jsonBytes)
-	} else {
-		jsonBytes, err := json.Marshal(obj)
-		if err != nil {
-			return ""
-		}
-		return string(jsonBytes)
-	}
-}
-func (r *RemotingSerializable) Decode(data []byte, classOfT interface{}) (interface{}, error) {
-	jsonStr := string(data)
-	fmt.Println(jsonStr)
-	return r.FromJson(jsonStr, classOfT)
-}
-
-func (r *RemotingSerializable) FromJson(jsonStr string, classOfT interface{}) (interface{}, error) {
-	jsonStr, err := r.updateNoValidJson(jsonStr)
-	if err != nil {
-		return nil, err
-	}
-	jsonStr, err = r.strObjectJson(jsonStr)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal([]byte(jsonStr), classOfT)
-	if err != nil {
-		return nil, err
-	}
-	return classOfT, nil
-}
-
-func (r *RemotingSerializable) updateNoValidJson(jsonStr string) (string, error) {
-	// 匹配不符合JSON规范的键
-	re := regexp.MustCompile(`(?m)(([{,]\s*)(\d+):)`)
-
-	// 替换不符合规范的键为带双引号的键
-	validJSONStr := re.ReplaceAllStringFunc(jsonStr, func(match string) string {
-		// 取出匹配的键
-		re2 := regexp.MustCompile(`(?m)(\d+)`)
-		match2 := re2.ReplaceAllStringFunc(match, func(key string) string {
-			return fmt.Sprintf(`"%s"`, key)
-		})
-		//key=strings.TrimPrefix(key,",")
-		return match2
-	})
-	return validJSONStr, nil
-}
-
-func (r *RemotingSerializable) strObjectJson(jsonStr string) (string, error) {
-	// 匹配不符合JSON规范的键
-	re := regexp.MustCompile(`(?m)(([{,]\s*)(\{[^{}]*\}):)`)
-	r.ObjToKey = re.Match([]byte(jsonStr))
-	if !r.ObjToKey {
-		return jsonStr, nil
-	}
-
-	// 替换不符合规范的键为带双引号的键
-	validJSONStr := re.ReplaceAllStringFunc(jsonStr, func(match string) string {
-		// 取出匹配的键
-		re2 := regexp.MustCompile(`(?m)(\{[^{}]*\})`)
-		match2 := re2.ReplaceAllStringFunc(match, func(key string) string {
-			key = strings.ReplaceAll(key, "\"", "\\\"")
-			return fmt.Sprintf(`"%s"`, key)
-		})
-		return match2
-	})
-	return validJSONStr, nil
-}
 
 type TopicList struct {
 	TopicList  []string

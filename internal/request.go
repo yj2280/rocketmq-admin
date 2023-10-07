@@ -46,6 +46,7 @@ const (
 	ReqCheckTransactionState         = int16(39)
 	ReqNotifyConsumerIdsChanged      = int16(40)
 	ReqGetAllSubscriptionGroupConfig = int16(201)
+	ReqGetTopicStats                 = int16(202)
 	ReqGetConsumerConnectionList     = int16(203)
 	ReqGetAllTopicListFromNameServer = int16(206)
 	ReqGetConsumerStatsFromServer    = int16(208)
@@ -319,6 +320,16 @@ func (request *GetRouteInfoRequestHeader) Encode() map[string]string {
 	return maps
 }
 
+type GetTopicStatsInfoRequestHeader struct {
+	Topic string
+}
+
+func (request *GetTopicStatsInfoRequestHeader) Encode() map[string]string {
+	maps := make(map[string]string)
+	maps["topic"] = request.Topic
+	return maps
+}
+
 type GetConsumerRunningInfoHeader struct {
 	consumerGroup string
 	clientID      string
@@ -433,17 +444,17 @@ func (request *DeleteTopicRequestHeader) Encode() map[string]string {
 }
 
 type ResetOffsetHeader struct {
-	topic     string
-	group     string
-	timestamp int64
-	isForce   bool
+	Topic     string
+	Group     string
+	Timestamp int64
+	IsForce   bool
 }
 
 func (request *ResetOffsetHeader) Encode() map[string]string {
 	maps := make(map[string]string)
-	maps["topic"] = request.topic
-	maps["group"] = request.group
-	maps["timestamp"] = strconv.FormatInt(request.timestamp, 10)
+	maps["topic"] = request.Topic
+	maps["group"] = request.Group
+	maps["timestamp"] = strconv.FormatInt(request.Timestamp, 10)
 	return maps
 }
 
@@ -453,15 +464,15 @@ func (request *ResetOffsetHeader) Decode(properties map[string]string) {
 	}
 
 	if v, existed := properties["topic"]; existed {
-		request.topic = v
+		request.Topic = v
 	}
 
 	if v, existed := properties["group"]; existed {
-		request.group = v
+		request.Group = v
 	}
 
 	if v, existed := properties["timestamp"]; existed {
-		request.timestamp, _ = strconv.ParseInt(v, 10, 0)
+		request.Timestamp, _ = strconv.ParseInt(v, 10, 0)
 	}
 }
 

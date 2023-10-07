@@ -43,6 +43,7 @@ type LanguageCode byte
 
 const (
 	_Java    = LanguageCode(0)
+	CPP      = LanguageCode(1)
 	_Go      = LanguageCode(9)
 	_Unknown = LanguageCode(127)
 )

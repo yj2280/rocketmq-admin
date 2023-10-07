@@ -124,6 +124,9 @@ func (a *MqAdmin) GetAllSubscriptionGroup(ctx context.Context, brokerAddr string
 	} else {
 		rlog.Info("Get all group list success", map[string]interface{}{})
 	}
+	if response.Code != 0 {
+		return nil, primitive.NewMQClientErr(response.Code, response.Remark)
+	}
 	var subscriptionGroupWrapper SubscriptionGroupWrapper
 	_, err = subscriptionGroupWrapper.Decode(response.Body, &subscriptionGroupWrapper)
 	if err != nil {
@@ -163,8 +166,8 @@ func (a *MqAdmin) QueryGroupList() ([]*GroupConsumeInfo, error) {
 
 func (a *MqAdmin) QueryGroup(group string) (*GroupConsumeInfo, error) {
 	groupConsumeInfo := &GroupConsumeInfo{}
-	consumeStats := a.examineConsumeStats(group)
-	conn, err := a.examineConsumerConnectionInfo(context.Background(), group)
+	consumeStats := GetClientApi(a.Cli).ExamineConsumeStats(group)
+	conn, err := GetClientApi(a.Cli).ExamineConsumerConnectionInfo(context.Background(), group)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +189,7 @@ func (a *MqAdmin) QueryConsumeStatsListByGroup(group string) ([]*TopicConsumerIn
 }
 
 func (a *MqAdmin) QueryConsumeStatsList(topic, group string) ([]*TopicConsumerInfo, error) {
-	consumeStats := a.examineConsumeStats(group)
+	consumeStats := GetClientApi(a.Cli).ExamineConsumeStats(group)
 	mqList := []*primitive.MessageQueue{}
 	for queue, _ := range consumeStats.OffsetTable {
 		if topic == "" || queue.Topic == topic {
@@ -212,7 +215,7 @@ func (a *MqAdmin) QueryConsumeStatsList(topic, group string) ([]*TopicConsumerIn
 }
 
 func (a *MqAdmin) getClientConnection(groupName string) map[*primitive.MessageQueue]string {
-	conn, err := a.examineConsumerConnectionInfo(context.Background(), groupName)
+	conn, err := GetClientApi(a.Cli).ExamineConsumerConnectionInfo(context.Background(), groupName)
 	if err != nil {
 		rlog.Error("Get consumer connect for group error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -232,7 +235,7 @@ func (a *MqAdmin) getClientConnection(groupName string) map[*primitive.MessageQu
 }
 
 func (a *MqAdmin) QueryConsumerRunningInfo(group, clientId string, jstack bool) (*AdminConsumerRunningInfo, error) {
-	routeInfo, err := a.QueryTopicRouteInfo(utils.MixAllUtil.GetRetryTopic(group))
+	routeInfo, err := GetClientApi(a.Cli).QueryTopicRouteInfo(utils.MixAllUtil.GetRetryTopic(group))
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +268,9 @@ func (a *MqAdmin) getConsumerRunningInfo(addr, group, clientId string, jstack bo
 	} else {
 		rlog.Info("Fetch all consumerRunningInfo success", map[string]interface{}{})
 	}
+	if response.Code != 0 {
+		return nil, primitive.NewMQClientErr(response.Code, response.Remark)
+	}
 	var runningInfo AdminConsumerRunningInfo
 	_, err = runningInfo.Decode(response.Body, &runningInfo)
 	if err != nil {
@@ -274,63 +280,6 @@ func (a *MqAdmin) getConsumerRunningInfo(addr, group, clientId string, jstack bo
 		return nil, err
 	}
 	return &runningInfo, nil
-}
-
-func (a *MqAdmin) examineConsumeStats(group string) *ConsumeStats {
-	return a.examineConsumeStatsWithTopic(group, "")
-}
-
-type Alsa ConsumeStats
-
-func (a *MqAdmin) examineConsumeStatsWithTopic(group string, topic string) *ConsumeStats {
-	routeInfo, err := a.QueryTopicRouteInfo(utils.MixAllUtil.GetRetryTopic(group))
-	result := &ConsumeStats{}
-	if err != nil {
-		return result
-	}
-	for _, bd := range routeInfo.BrokerDataList {
-		addr := bd.SelectBrokerAddr()
-		if addr != "" {
-			header := &internal.GetConsumeStatsRequestHeader{
-				ConsumerGroup: group,
-				Topic:         topic,
-			}
-			cmd := remote.NewRemotingCommand(internal.ReqGetConsumerStatsFromServer, header, nil)
-			response, err := a.Cli.InvokeSync(context.Background(), addr, cmd, 3*time.Second)
-			if err != nil {
-				rlog.Error("Fetch all consumerConnectiion list error", map[string]interface{}{
-					rlog.LogKeyUnderlayError: err,
-				})
-				return nil
-			} else {
-				rlog.Info("Fetch all consumerConnectiion list success", map[string]interface{}{})
-			}
-			var stats ConsumeStats
-			aux := &struct {
-				OffsetTable map[string]*OffsetWrapper `json:"offsetTable"`
-				*Alsa
-			}{
-				Alsa: (*Alsa)(&stats),
-			}
-			_, err = stats.Decode(response.Body, &aux)
-			if err != nil {
-				rlog.Error("Fetch all consumerConnectiion list decode error", map[string]interface{}{
-					rlog.LogKeyUnderlayError: err,
-				})
-				return nil
-			}
-			if result.OffsetTable == nil {
-				result.OffsetTable = make(map[*primitive.MessageQueue]*OffsetWrapper)
-			}
-			for key, val := range aux.OffsetTable {
-				var queue *primitive.MessageQueue
-				stats.FromJson(key, &queue)
-				result.OffsetTable[queue] = val
-			}
-			result.ConsumeTps += aux.ConsumeTps
-		}
-	}
-	return result
 }
 
 func (a *MqAdmin) FetchAllTopicList(ctx context.Context) (*TopicList, error) {
@@ -356,37 +305,155 @@ func (a *MqAdmin) FetchAllTopicList(ctx context.Context) (*TopicList, error) {
 }
 
 func (a *MqAdmin) GetConsumerConnectionInfo(group string) (*ConsumerConnection, error) {
-	return a.examineConsumerConnectionInfo(context.Background(), group)
+	return GetClientApi(a.Cli).ExamineConsumerConnectionInfo(context.Background(), group)
 }
 
-func (a *MqAdmin) examineConsumerConnectionInfo(ctx context.Context, group string) (*ConsumerConnection, error) {
-	header := &internal.GetConsumerConnectionListRequestHeader{
-		ConsumerGroup: group,
+func (a *MqAdmin) ResetOffset(request *ResetOffsetRequest) (map[string]*ConsumerGroupRollBackStat, error) {
+	groupRollbackStats := make(map[string]*ConsumerGroupRollBackStat)
+	for _, group := range request.ConsumerGroupList {
+		rollbackStatsMap, err := a.ResetOffsetByTimestamp(request.Topic, group, request.ResetTime, request.Force)
+		groupRollbackStat := &ConsumerGroupRollBackStat{Status: true}
+		if err != nil {
+			if primitive.IsMQClientErr(err) {
+				if (err.(*primitive.MQClientErr)).Code == 206 {
+					rollbackStats := a.ResetOffsetByTimestampOld(group, request.Topic, request.ResetTime, true)
+					groupRollbackStat.RollbackStatsList = rollbackStats
+					groupRollbackStats[group] = groupRollbackStat
+					continue
+				}
+
+			}
+			groupRollbackStat.Status = false
+			groupRollbackStat.ErrMsg = err.Error()
+			groupRollbackStats[group] = groupRollbackStat
+			continue
+		}
+		rollbackStatList := []*RollbackStats{}
+		for queue, val := range rollbackStatsMap {
+			rollbackStat := &RollbackStats{
+				RollbackOffset: val,
+				QueueId:        queue.QueueId,
+				BrokerName:     queue.BrokerName,
+			}
+			rollbackStatList = append(rollbackStatList, rollbackStat)
+		}
+		groupRollbackStat.RollbackStatsList = rollbackStatList
+		groupRollbackStats[group] = groupRollbackStat
 	}
-	routeInfo, err := a.QueryTopicRouteInfo(utils.MixAllUtil.GetRetryTopic(group))
+	return groupRollbackStats, nil
+}
+
+func (a *MqAdmin) ResetOffsetByTimestamp(topic, group string, timestamp int64, isForce bool) (map[primitive.MessageQueue]int64, error) {
+	return a.ResetOffsetByTimestamp2(topic, group, timestamp, isForce, false)
+}
+
+func (a *MqAdmin) ResetOffsetByTimestamp2(topic, group string, timestamp int64, isForce, isC bool) (map[primitive.MessageQueue]int64, error) {
+	routeInfo, _ := GetClientApi(a.Cli).QueryTopicRouteInfo(utils.MixAllUtil.GetRetryTopic(group))
+	allOffsets := make(map[primitive.MessageQueue]int64)
 	if routeInfo == nil || len(routeInfo.BrokerDataList) == 0 {
-		return nil, errors.New("路由数据不能为空")
+		return allOffsets, nil
 	}
-	brokerInfo := routeInfo.BrokerDataList[0]
-	cmd := remote.NewRemotingCommand(internal.ReqGetConsumerConnectionList, header, nil)
-	response, err := a.Cli.InvokeSync(ctx, brokerInfo.SelectBrokerAddr(), cmd, 3*time.Second)
+	for _, brokerData := range routeInfo.BrokerDataList {
+		addr := brokerData.SelectBrokerAddr()
+		if addr == "" {
+			continue
+		}
+		offsetTabs, err := GetClientApi(a.Cli).InvokeBrokerToResetOffset2(addr, topic, group, timestamp, isForce, isC)
+		if err != nil {
+			return nil, err
+		}
+		if offsetTabs == nil {
+			continue
+		}
+		for key, value := range offsetTabs {
+			allOffsets[key] = value
+		}
+	}
+	return allOffsets, nil
+}
+
+func (a *MqAdmin) ResetOffsetByTimestampOld(topic, group string, timestamp int64, isForce bool) []*RollbackStats {
+	routeInfo, err := GetClientApi(a.Cli).QueryTopicRouteInfo(topic)
+	rollbackStats := []*RollbackStats{}
 	if err != nil {
-		rlog.Error("Fetch all consumerConnectiion list error", map[string]interface{}{
-			rlog.LogKeyUnderlayError: err,
-		})
-		return nil, err
+		return nil
+	}
+	topicRouteMap := make(map[string]int)
+	for _, brokerData := range routeInfo.BrokerDataList {
+
+		for _, queue := range routeInfo.QueueDataList {
+			topicRouteMap[brokerData.SelectBrokerAddr()] = queue.ReadQueueNums
+		}
+	}
+	for _, brokerData := range routeInfo.BrokerDataList {
+		addr := brokerData.SelectBrokerAddr()
+		if addr == "" {
+			continue
+		}
+		consumeStats, _ := GetClientApi(a.Cli).GetConsumeStatsNoTopic(addr, group)
+		hasConsume := false
+		for queue, wrapper := range consumeStats.OffsetTable {
+			if topic == queue.Topic {
+				hasConsume = true
+				rollbackStat := a.resetOffsetConsumeOffset(addr, group, queue, wrapper, timestamp, isForce)
+				rollbackStats = append(rollbackStats, rollbackStat)
+			}
+		}
+		if !hasConsume {
+			topicStat, _ := GetClientApi(a.Cli).GetTopicStatsInfo(addr, topic)
+			if topicStat == nil {
+				continue
+			}
+			for idx := 0; idx < topicRouteMap[addr]; idx++ {
+				que := &primitive.MessageQueue{
+					Topic:      topic,
+					BrokerName: brokerData.BrokerName,
+					QueueId:    idx,
+				}
+				wrap := &OffsetWrapper{
+					BrokerOffset:   topicStat.OffsetTable[que].MaxOffset,
+					ConsumerOffset: topicStat.OffsetTable[que].MinOffset,
+				}
+				rollbackStat := a.resetOffsetConsumeOffset(addr, group, que, wrap, timestamp, isForce)
+				rollbackStats = append(rollbackStats, rollbackStat)
+			}
+		}
+	}
+	return rollbackStats
+}
+
+func (a *MqAdmin) resetOffsetConsumeOffset(brokerAddr, group string, queue *primitive.MessageQueue, wrapper *OffsetWrapper, timestamp int64, force bool) *RollbackStats {
+	resetOffset := wrapper.ConsumerOffset
+	if timestamp == -1 {
+		resetOffset, _ = GetClientApi(a.Cli).GetMaxOffset(brokerAddr, queue.Topic, queue.QueueId)
 	} else {
-		rlog.Info("Fetch all consumerConnectiion list success", map[string]interface{}{})
+		resetOffset, _ = GetClientApi(a.Cli).SearchOffset(brokerAddr, queue.Topic, queue.QueueId, timestamp)
 	}
-	var connect ConsumerConnection
-	_, err = connect.Decode(response.Body, &connect)
-	if err != nil {
-		rlog.Error("Fetch all consumerConnectiion list decode error", map[string]interface{}{
-			rlog.LogKeyUnderlayError: err,
-		})
-		return nil, err
+	rollbackStat := &RollbackStats{
+		BrokerName:      queue.BrokerName,
+		QueueId:         queue.QueueId,
+		BrokerOffset:    wrapper.BrokerOffset,
+		ConsumerOffset:  wrapper.ConsumerOffset,
+		TimestampOffset: resetOffset,
+		RollbackOffset:  wrapper.ConsumerOffset,
 	}
-	return &connect, nil
+	if resetOffset < 0 {
+		return rollbackStat
+	}
+	if force || resetOffset <= wrapper.ConsumerOffset {
+		rollbackStat.RollbackOffset = resetOffset
+		header := &internal.UpdateConsumerOffsetRequestHeader{
+			ConsumerGroup: group,
+			Topic:         queue.Topic,
+			QueueId:       queue.QueueId,
+			CommitOffset:  resetOffset,
+		}
+		err := GetClientApi(a.Cli).UpdateConsumerOffset(brokerAddr, header)
+		if err != nil {
+			return nil
+		}
+	}
+	return rollbackStat
 }
 
 // CreateTopic create topic.
@@ -500,10 +567,6 @@ func (a *MqAdmin) DeleteTopic(ctx context.Context, opts ...OptionDelete) error {
 
 func (a *MqAdmin) FetchPublishMessageQueues(ctx context.Context, topic string) ([]*primitive.MessageQueue, error) {
 	return a.Cli.GetNameSrv().FetchPublishMessageQueues(utils.WrapNamespace(a.opts.Namespace, topic))
-}
-
-func (a *MqAdmin) QueryTopicRouteInfo(topic string) (*internal.TopicRouteData, error) {
-	return a.Cli.GetNameSrv().FindRouteInfoByTopic(topic)
 }
 
 func (a *MqAdmin) getBrokerClusterInfo(ctx context.Context) (*ClusterInfo, error) {
