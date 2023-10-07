@@ -33,7 +33,7 @@ func (c *MqClientApi) InvokeBrokerToResetOffset2(addr, topic, group string, time
 		Timestamp: timestamp,
 		IsForce:   isForce,
 	}
-	cmd := remote.NewRemotingCommand(internal.ReqResetConsumerOffset, header, nil)
+	cmd := remote.NewRemotingCommand(internal.ReqInvokeBrokerToResetOffset, header, nil)
 	if isC {
 		cmd.Language = remote.CPP
 	}
@@ -204,6 +204,9 @@ func (c *MqClientApi) GetMaxOffset(addr, topic string, queueId int) (int64, erro
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetMaxOffset, header, nil)
 	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return -1, errors.New("远程响应失败！")
+	}
 	if response.Code != 0 {
 		return -1, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
@@ -223,6 +226,9 @@ func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp in
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqSearchOffsetByTimestamp, header, nil)
 	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return -1, errors.New("远程响应失败！")
+	}
 	if response.Code != 0 {
 		return -1, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
@@ -240,6 +246,9 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetTopicStats, header, nil)
 	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return nil, errors.New("远程响应失败！")
+	}
 	if response.Code != 0 {
 		return nil, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
@@ -269,6 +278,42 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 func (c *MqClientApi) UpdateConsumerOffset(addr string, header *internal.UpdateConsumerOffsetRequestHeader) error {
 	cmd := remote.NewRemotingCommand(internal.ReqUpdateConsumerOffset, header, nil)
 	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return errors.New("远程响应失败！")
+	}
+	if response.Code != 0 {
+		return primitive.NewMQClientErr(response.Code, response.Remark)
+	}
+	return nil
+}
+
+func (c *MqClientApi) DeleteSubscriptionGroup(addr, group string) error {
+	header := &internal.DeleteSubscriptionGroupRequestHeader{
+		GroupName: group,
+	}
+	cmd := remote.NewRemotingCommand(internal.ReqDeleteGroupInBroker, header, nil)
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return errors.New("远程响应失败！")
+	}
+	if response.Code != 0 {
+		return primitive.NewMQClientErr(response.Code, response.Remark)
+	}
+	return nil
+}
+
+func (c *MqClientApi) CreateSubscriptionGroup(addr string, config *SubscriptionGroupConfig) error {
+	cmd := remote.NewRemotingCommand(internal.ReqUpdateCreateSubscriptionGroup, nil, nil)
+	remoteSerize := &RemotingSerializable{}
+	body, err := remoteSerize.Encode(config)
+	if err != nil {
+		return err
+	}
+	cmd.Body = body
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if response == nil {
+		return errors.New("远程响应失败！")
+	}
 	if response.Code != 0 {
 		return primitive.NewMQClientErr(response.Code, response.Remark)
 	}

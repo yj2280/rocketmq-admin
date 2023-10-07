@@ -45,15 +45,18 @@ const (
 	ReqSendBatchMessage              = int16(320)
 	ReqCheckTransactionState         = int16(39)
 	ReqNotifyConsumerIdsChanged      = int16(40)
+	ReqUpdateCreateSubscriptionGroup = int16(200)
 	ReqGetAllSubscriptionGroupConfig = int16(201)
 	ReqGetTopicStats                 = int16(202)
 	ReqGetConsumerConnectionList     = int16(203)
 	ReqGetAllTopicListFromNameServer = int16(206)
+	ReqDeleteGroupInBroker           = int16(207)
 	ReqGetConsumerStatsFromServer    = int16(208)
 	ReqDeleteTopicInBroker           = int16(215)
 	ReqDeleteTopicInNameSrv          = int16(216)
 	ReqResetConsumerOffset           = int16(220)
 	ReqGetConsumerStatsFromClient    = int16(221)
+	ReqInvokeBrokerToResetOffset     = int16(222)
 	ReqGetConsumerRunningInfo        = int16(307)
 	ReqConsumeMessageDirectly        = int16(309)
 	ReqSendReplyMessage              = int16(324)
@@ -439,6 +442,17 @@ type DeleteTopicRequestHeader struct {
 func (request *DeleteTopicRequestHeader) Encode() map[string]string {
 	maps := make(map[string]string)
 	maps["topic"] = request.Topic
+
+	return maps
+}
+
+type DeleteSubscriptionGroupRequestHeader struct {
+	GroupName string
+}
+
+func (request *DeleteSubscriptionGroupRequestHeader) Encode() map[string]string {
+	maps := make(map[string]string)
+	maps["groupName"] = request.GroupName
 
 	return maps
 }

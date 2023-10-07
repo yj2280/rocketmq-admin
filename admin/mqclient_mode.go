@@ -132,3 +132,14 @@ type TopicOffset struct {
 	MaxOffset           int64
 	LastUpdateTimestamp int64
 }
+
+type DeleteSubGroupRequest struct {
+	GroupName      string   `json:"groupName"`
+	BrokerNameList []string `json:"brokerNameList"`
+}
+
+type ConsumerConfigInfo struct {
+	ClusterNameList         []string                `json:"clusterNameList"`
+	BrokerNameList          []string                `json:"brokerNameList"`
+	SubscriptionGroupConfig SubscriptionGroupConfig `json:"subscriptionGroupConfig"`
+}

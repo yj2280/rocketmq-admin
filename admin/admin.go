@@ -184,6 +184,78 @@ func (a *MqAdmin) QueryGroup(group string) (*GroupConsumeInfo, error) {
 	}
 	return groupConsumeInfo, nil
 }
+
+func (a *MqAdmin) DeleteSubGroup(request *DeleteSubGroupRequest) bool {
+	cluster, err := a.getBrokerClusterInfo(context.Background())
+	if err != nil {
+		return false
+	}
+	if cluster == nil || len(cluster.BrokerAddrTable) == 0 {
+		return false
+	}
+	for _, brokerName := range request.BrokerNameList {
+		GetClientApi(a.Cli).DeleteSubscriptionGroup(cluster.BrokerAddrTable[brokerName].SelectBrokerAddr(), request.GroupName)
+	}
+	return true
+}
+
+func (a *MqAdmin) ExamineSubscriptionGroupConfig(group string) ([]*ConsumerConfigInfo, error) {
+	consumerConfigInfoList := []*ConsumerConfigInfo{}
+	cluster, err := a.getBrokerClusterInfo(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	for key, brokerData := range cluster.BrokerAddrTable {
+		addr := brokerData.SelectBrokerAddr()
+		wrapper, err := a.GetAllSubscriptionGroup(context.Background(), addr, 3*time.Second)
+		if err != nil {
+			continue
+		}
+		subGroupConfig := wrapper.SubscriptionGroupTable[group]
+		if &subGroupConfig == nil {
+			continue
+		}
+		consumerConfigInfoList = append(consumerConfigInfoList, &ConsumerConfigInfo{
+			BrokerNameList:          []string{key},
+			SubscriptionGroupConfig: subGroupConfig,
+		})
+	}
+	return consumerConfigInfoList, nil
+}
+
+func (a *MqAdmin) FetchBrokerNameSetBySubscriptionGroup(group string) ([]string, error) {
+	brokerNameSet := []string{}
+	consumerConfigs, err := a.ExamineSubscriptionGroupConfig(group)
+	if err != nil {
+		return nil, err
+	}
+	for _, config := range consumerConfigs {
+		brokerNameSet = append(brokerNameSet, config.BrokerNameList...)
+	}
+	return brokerNameSet, nil
+}
+
+func (a *MqAdmin) ConsumerCreateOrUpdateRequest(config *ConsumerConfigInfo) (bool, error) {
+	if config == nil || len(config.BrokerNameList) == 0 || len(config.ClusterNameList) == 0 {
+		return false, errors.New("数据错误！")
+	}
+	cluster, err := a.getBrokerClusterInfo(context.Background())
+	if err != nil {
+		return false, err
+	}
+	brokerNames := config.BrokerNameList
+	for _, clusterName := range config.ClusterNameList {
+		brokerNames = append(brokerNames, cluster.ClusterAddrTable[clusterName]...)
+	}
+	for _, brokerName := range brokerNames {
+		addr := cluster.BrokerAddrTable[brokerName].SelectBrokerAddr()
+		err := GetClientApi(a.Cli).CreateSubscriptionGroup(addr, &config.SubscriptionGroupConfig)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
 func (a *MqAdmin) QueryConsumeStatsListByGroup(group string) ([]*TopicConsumerInfo, error) {
 	return a.QueryConsumeStatsList("", group)
 }
