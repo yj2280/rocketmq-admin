@@ -183,11 +183,11 @@ type ConsumeStatus struct {
 }
 
 type ConsumerRunningInfo struct {
-	Properties       map[string]string
-	SubscriptionData map[*SubscriptionData]bool
-	MQTable          map[primitive.MessageQueue]ProcessQueueInfo
-	StatusTable      map[string]ConsumeStatus
-	JStack           string // just follow java request param name, but pass golang stack here.
+	Properties       map[string]string                           `json:"properties"`
+	SubscriptionData map[*SubscriptionData]bool                  `json:"subscriptionData"`
+	MQTable          map[primitive.MessageQueue]ProcessQueueInfo `json:"mqTable"`
+	StatusTable      map[string]ConsumeStatus                    `json:"statusTable"`
+	JStack           string                                      // just follow java request param name, but pass golang stack here.
 }
 
 func (info ConsumerRunningInfo) Encode() ([]byte, error) {

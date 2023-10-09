@@ -42,14 +42,14 @@ const (
 
 // SendResult RocketMQ send result
 type SendResult struct {
-	Status        SendStatus
-	MsgID         string
-	MessageQueue  *MessageQueue
-	QueueOffset   int64
-	TransactionID string
-	OffsetMsgID   string
-	RegionID      string
-	TraceOn       bool
+	Status        SendStatus    `json:"status"`
+	MsgID         string        `json:"msgId"`
+	MessageQueue  *MessageQueue `json:"messageQueue"`
+	QueueOffset   int64         `json:"queueOffset"`
+	TransactionID string        `json:"transactionId"`
+	OffsetMsgID   string        `json:"offsetMsgId"`
+	RegionID      string        `json:"regionId"`
+	TraceOn       bool          `json:"traceOn"`
 }
 
 func NewSendResult() *SendResult {

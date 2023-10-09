@@ -123,14 +123,21 @@ type GetMaxOffsetResponseHeader struct {
 }
 
 type TopicStatsTable struct {
-	OffsetTable map[*primitive.MessageQueue]*TopicOffset `json:"-"`
+	OffsetTable map[*primitive.MessageQueue]*TopicOffset `json:"offsetTable"`
 	RemotingSerializable
 }
 
 type TopicOffset struct {
-	MinOffset           int64
-	MaxOffset           int64
-	LastUpdateTimestamp int64
+	MinOffset           int64 `json:"minOffset"`
+	MaxOffset           int64 `json:"maxOffset"`
+	LastUpdateTimestamp int64 `json:"lastUpdateTimestamp"`
+}
+
+type SendTopicMessageRequest struct {
+	Topic       string `json:"topic"`
+	Key         string `json:"key"`
+	Tag         string `json:"tag"`
+	MessageBody string `json:"messageBody"`
 }
 
 type DeleteSubGroupRequest struct {
@@ -142,4 +149,41 @@ type ConsumerConfigInfo struct {
 	ClusterNameList         []string                `json:"clusterNameList"`
 	BrokerNameList          []string                `json:"brokerNameList"`
 	SubscriptionGroupConfig SubscriptionGroupConfig `json:"subscriptionGroupConfig"`
+}
+
+type ConnectionInfo struct {
+	*Connection
+	VersionDesc string `json:"versionDesc"`
+}
+
+type ConsumerConnectionInfo struct {
+	ConnectionSet []ConnectionInfo `json:"connectionSet"`
+	*ConsumerConnection
+}
+
+type GroupList struct {
+	GroupList []string `json:"groupList"`
+	RemotingSerializable
+}
+
+type MessageView primitive.MessageExt
+
+type MessageTrack struct {
+	ConsumerGroup string `json:"consumerGroup"`
+	ExceptionDesc string `json:"exceptionDesc"`
+	TrackType     string `json:"trackType"`
+}
+
+func (m *MessageView) CompareTo(o interface{}) int {
+	old := o.(*MessageView)
+	return int(m.StoreTimestamp - old.StoreTimestamp)
+}
+
+type QueryResult struct {
+	IndexLastUpdateTimestamp int64          `json:"indexLastUpdateTimestamp"`
+	MessageList              []*MessageView `json:"messageList"`
+}
+
+type Comparable interface {
+	CompareTo(o interface{}) int
 }

@@ -26,6 +26,10 @@ type MQBrokerErr struct {
 	ErrorMessage string
 }
 
+func NewMQBrokerErr(code int16, msg string) error {
+	return &MQBrokerErr{ResponseCode: code, ErrorMessage: msg}
+}
+
 func (e MQBrokerErr) Error() string {
 	return "CODE: " + strconv.Itoa(int(e.ResponseCode)) + "  DESC: " + e.ErrorMessage
 }
@@ -62,5 +66,10 @@ func IsRemotingErr(err error) bool {
 
 func IsMQClientErr(err error) bool {
 	_, ok := err.(*MQClientErr)
+	return ok
+}
+
+func IsMQBrokerErr(err error) bool {
+	_, ok := err.(*MQBrokerErr)
 	return ok
 }

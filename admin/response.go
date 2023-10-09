@@ -22,6 +22,7 @@ import (
 	"github.com/slh92/rocketmq-admin/internal/remote"
 	"github.com/slh92/rocketmq-admin/primitive"
 	"math"
+	"strconv"
 )
 
 type ConsumeType string
@@ -42,17 +43,17 @@ const (
 )
 
 type TopicList struct {
-	TopicList  []string
-	BrokerAddr string
+	TopicList  []string `json:"topicList"`
+	BrokerAddr string   `json:"brokerAddr"`
 	RemotingSerializable
 }
 
 type ConsumerConnection struct {
-	ConnectionSet     []Connection
-	SubscriptionTable map[string]SubscriptionData
-	ConsumeType       ConsumeType
-	MessageModel      MessageModel
-	ConsumeFromWhere  ConsumeFromWhere
+	ConnectionSet     []Connection                `json:"connectionSet"`
+	SubscriptionTable map[string]SubscriptionData `json:"subscriptionTable"`
+	ConsumeType       ConsumeType                 `json:"consumeType"`
+	MessageModel      MessageModel                `json:"messageModel"`
+	ConsumeFromWhere  ConsumeFromWhere            `json:"consumeFromWhere"`
 	RemotingSerializable
 }
 
@@ -68,20 +69,20 @@ func (c *ConsumerConnection) ComputeMinVersion() int64 {
 }
 
 type Connection struct {
-	ClientId   string
-	ClientAddr string
-	Language   remote.LanguageCode
-	Version    int64
+	ClientId   string              `json:"clientId"`
+	ClientAddr string              `json:"clientAddr"`
+	Language   remote.LanguageCode `json:"language"`
+	Version    int64               `json:"version"`
 }
 
 type SubscriptionData struct {
-	ClassFilterMode   bool
-	Topic             string
-	SubString         string
-	TagsSet           []string
-	CodeSet           []int
-	SubVersion        int64
-	FilterClassSource string
+	ClassFilterMode   bool     `json:"classFilterMode"`
+	Topic             string   `json:"topic"`
+	SubString         string   `json:"subString"`
+	TagsSet           []string `json:"tagsSet"`
+	CodeSet           []int    `json:"codeSet"`
+	SubVersion        int64    `json:"subVersion"`
+	FilterClassSource string   `json:"filterClassSource"`
 }
 
 type SubscriptionGroupWrapper struct {
@@ -108,13 +109,21 @@ type SubscriptionGroupConfig struct {
 }
 
 type GroupConsumeInfo struct {
-	Group        string
-	Version      string
-	Count        int
-	ConsumeType  ConsumeType
-	MessageModel MessageModel
-	ConsumeTps   int
-	DiffTotal    int64
+	Group        string       `json:"group"`
+	Version      string       `json:"version"`
+	Count        int          `json:"count"`
+	ConsumeType  ConsumeType  `json:"consumeType"`
+	MessageModel MessageModel `json:"messageModel"`
+	ConsumeTps   int          `json:"consumeTps"`
+	DiffTotal    int64        `json:"diffTotal"`
+}
+
+func (g *GroupConsumeInfo) CompareTo(o interface{}) int {
+	old := o.(*GroupConsumeInfo)
+	if g.Count != old.Count {
+		return old.Count - g.Count
+	}
+	return int(old.DiffTotal - g.DiffTotal)
 }
 
 type ClusterInfo struct {
@@ -145,10 +154,10 @@ type OffsetWrapper struct {
 }
 
 type TopicConsumerInfo struct {
-	Topic             string
-	DiffTotal         int64
-	LastTimestamp     int64
-	QueueStatInfoList []*QueueStatInfo
+	Topic             string           `json:"topic"`
+	DiffTotal         int64            `json:"diffTotal"`
+	LastTimestamp     int64            `json:"lastTimestamp"`
+	QueueStatInfoList []*QueueStatInfo `json:"queueStatInfoList"`
 }
 
 func (t *TopicConsumerInfo) AppendQueueStatInfo(queueStat *QueueStatInfo) {
@@ -158,12 +167,12 @@ func (t *TopicConsumerInfo) AppendQueueStatInfo(queueStat *QueueStatInfo) {
 }
 
 type QueueStatInfo struct {
-	BrokerName     string
-	QueueId        int
-	BrokerOffset   int64
-	ConsumerOffset int64
-	ClientInfo     string
-	LastTimestamp  int64
+	BrokerName     string `json:"brokerName"`
+	QueueId        int    `json:"queueId"`
+	BrokerOffset   int64  `json:"brokerOffset"`
+	ConsumerOffset int64  `json:"consumerOffset"`
+	ClientInfo     string `json:"clientInfo"`
+	LastTimestamp  int64  `json:"lastTimestamp"`
 }
 
 func (q *QueueStatInfo) FromOffsetTableEntry(key *primitive.MessageQueue, value *OffsetWrapper) {
@@ -177,4 +186,22 @@ func (q *QueueStatInfo) FromOffsetTableEntry(key *primitive.MessageQueue, value 
 type AdminConsumerRunningInfo struct {
 	*internal.ConsumerRunningInfo
 	RemotingSerializable
+}
+
+type QueryMessageResponseHeader struct {
+	IndexLastUpdateTimestamp int64 `json:"indexLastUpdateTimestamp"`
+	IndexLastUpdatePhyoffset int64 `json:"indexLastUpdatePhyoffset"`
+}
+
+func (request *QueryMessageResponseHeader) Decode(properties map[string]string) {
+	if len(properties) == 0 {
+		return
+	}
+	if v, existed := properties["indexLastUpdateTimestamp"]; existed {
+		request.IndexLastUpdateTimestamp, _ = strconv.ParseInt(v, 32, 0)
+	}
+
+	if v, existed := properties["indexLastUpdatePhyoffset"]; existed {
+		request.IndexLastUpdatePhyoffset, _ = strconv.ParseInt(v, 32, 0)
+	}
 }

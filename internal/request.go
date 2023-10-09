@@ -57,6 +57,7 @@ const (
 	ReqResetConsumerOffset           = int16(220)
 	ReqGetConsumerStatsFromClient    = int16(221)
 	ReqInvokeBrokerToResetOffset     = int16(222)
+	QueryTopicConsumeByWho           = int16(300)
 	ReqGetConsumerRunningInfo        = int16(307)
 	ReqConsumeMessageDirectly        = int16(309)
 	ReqSendReplyMessage              = int16(324)
@@ -333,6 +334,16 @@ func (request *GetTopicStatsInfoRequestHeader) Encode() map[string]string {
 	return maps
 }
 
+type QueryTopicConsumeByWhoRequestHeader struct {
+	Topic string
+}
+
+func (request *QueryTopicConsumeByWhoRequestHeader) Encode() map[string]string {
+	maps := make(map[string]string)
+	maps["topic"] = request.Topic
+	return maps
+}
+
 type GetConsumerRunningInfoHeader struct {
 	consumerGroup string
 	clientID      string
@@ -491,18 +502,18 @@ func (request *ResetOffsetHeader) Decode(properties map[string]string) {
 }
 
 type ConsumeMessageDirectlyHeader struct {
-	consumerGroup string
-	clientID      string
-	msgId         string
-	brokerName    string
+	ConsumerGroup string
+	ClientID      string
+	MsgId         string
+	BrokerName    string
 }
 
 func (request *ConsumeMessageDirectlyHeader) Encode() map[string]string {
 	maps := make(map[string]string)
-	maps["consumerGroup"] = request.consumerGroup
-	maps["clientId"] = request.clientID
-	maps["msgId"] = request.msgId
-	maps["brokerName"] = request.brokerName
+	maps["consumerGroup"] = request.ConsumerGroup
+	maps["clientId"] = request.ClientID
+	maps["msgId"] = request.MsgId
+	maps["brokerName"] = request.BrokerName
 	return maps
 }
 
@@ -512,19 +523,19 @@ func (request *ConsumeMessageDirectlyHeader) Decode(properties map[string]string
 	}
 
 	if v, existed := properties["consumerGroup"]; existed {
-		request.consumerGroup = v
+		request.ConsumerGroup = v
 	}
 
 	if v, existed := properties["clientId"]; existed {
-		request.clientID = v
+		request.ClientID = v
 	}
 
 	if v, existed := properties["msgId"]; existed {
-		request.msgId = v
+		request.MsgId = v
 	}
 
 	if v, existed := properties["brokerName"]; existed {
-		request.brokerName = v
+		request.BrokerName = v
 	}
 }
 

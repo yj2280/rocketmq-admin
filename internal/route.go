@@ -529,7 +529,7 @@ func (s *namesrvs) routeData2PublishInfo(topic string, data *TopicRouteData) *To
 
 // TopicRouteData TopicRouteData
 type TopicRouteData struct {
-	OrderTopicConf string
+	OrderTopicConf string        `json:"orderTopicConf"`
 	QueueDataList  []*QueueData  `json:"queueDatas"`
 	BrokerDataList []*BrokerData `json:"brokerDatas"`
 }

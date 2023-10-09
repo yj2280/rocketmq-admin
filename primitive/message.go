@@ -422,6 +422,19 @@ func (mq *MessageQueue) HashCode() int {
 	return result
 }
 
+func (g *MessageQueue) CompareTo(o interface{}) int {
+	old := o.(*MessageQueue)
+	res := strings.Compare(g.Topic, old.Topic)
+	if res != 0 {
+		return res
+	}
+	res = strings.Compare(g.BrokerName, old.BrokerName)
+	if res != 0 {
+		return res
+	}
+	return g.QueueId - old.QueueId
+}
+
 type AccessChannel int
 
 const (
