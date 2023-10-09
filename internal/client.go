@@ -296,16 +296,16 @@ func GetOrNewRocketMQClient(option ClientOptions, callbackCh chan interface{}) R
 			rlog.Info("receive consume message directly request...", nil)
 			header := new(ConsumeMessageDirectlyHeader)
 			header.Decode(req.ExtFields)
-			val, exist := clientMap.Load(header.clientID)
+			val, exist := clientMap.Load(header.ClientID)
 			res := remote.NewRemotingCommand(ResError, nil, nil)
 			if !exist {
-				res.Remark = fmt.Sprintf("Can't find specified client instance of: %s", header.clientID)
+				res.Remark = fmt.Sprintf("Can't find specified client instance of: %s", header.ClientID)
 			} else {
 				cli, ok := val.(*rmqClient)
 				msg := primitive.DecodeMessage(req.Body)[0]
 				var consumeMessageDirectlyResult *ConsumeMessageDirectlyResult
 				if ok {
-					consumeMessageDirectlyResult = cli.consumeMessageDirectly(msg, header.consumerGroup, header.brokerName)
+					consumeMessageDirectlyResult = cli.consumeMessageDirectly(msg, header.ConsumerGroup, header.BrokerName)
 				}
 				if consumeMessageDirectlyResult != nil {
 					res.Code = ResSuccess
