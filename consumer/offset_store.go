@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -263,6 +264,12 @@ func (r *remoteBrokerOffsetStore) persist(mqs []*primitive.MessageQueue) {
 	defer r.mutex.Unlock()
 	if len(mqs) == 0 {
 		return
+	}
+	pc, file, line, ok := runtime.Caller(1)
+	if ok {
+		rlog.Info("persist be called", map[string]interface{}{
+			"position": fmt.Sprintf("%s:%s-%s", file, line, runtime.FuncForPC(pc).Name()),
+		})
 	}
 
 	used := make(map[primitive.MessageQueue]struct{}, 0)

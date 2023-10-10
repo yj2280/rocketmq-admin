@@ -166,7 +166,10 @@ type GroupList struct {
 	RemotingSerializable
 }
 
-type MessageView primitive.MessageExt
+type MessageView struct {
+	*primitive.MessageExt
+	MessageBody string `json:"messageBody"`
+}
 
 type MessageTrack struct {
 	ConsumerGroup string `json:"consumerGroup"`

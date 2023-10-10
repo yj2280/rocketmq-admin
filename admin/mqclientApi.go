@@ -318,19 +318,22 @@ func (c *MqClientApi) GetMaxOffset(addr, topic string, queueId int) (int64, erro
 		QueueId: queueId,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetMaxOffset, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if err != nil {
+		rlog.Error("Get maxoffset error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return -1, err
+	} else {
+		rlog.Info("Get maxoffset success", map[string]interface{}{})
+	}
 	if response == nil {
 		return -1, errors.New("远程响应失败！")
 	}
 	if response.Code != 0 {
 		return -1, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
-	var maxOffset GetMaxOffsetResponseHeader
-	_, err := maxOffset.Decode(response.Body, &maxOffset)
-	if err != nil {
-		return -1, err
-	}
-	return maxOffset.Offset, nil
+	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
 }
 
 func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp int64) (int64, error) {
@@ -340,19 +343,22 @@ func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp in
 		Timestamp: timestamp,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqSearchOffsetByTimestamp, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if err != nil {
+		rlog.Error("Search Offset error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return -1, err
+	} else {
+		rlog.Info("Search Offset success", map[string]interface{}{})
+	}
 	if response == nil {
 		return -1, errors.New("远程响应失败！")
 	}
 	if response.Code != 0 {
-		return -1, primitive.NewMQClientErr(response.Code, response.Remark)
+		return -1, primitive.NewMQBrokerErr(response.Code, response.Remark)
 	}
-	var maxOffset GetMaxOffsetResponseHeader
-	_, err := maxOffset.Decode(response.Body, &maxOffset)
-	if err != nil {
-		return -1, err
-	}
-	return maxOffset.Offset, nil
+	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
 }
 
 func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, error) {
@@ -440,6 +446,34 @@ func (c *MqClientApi) queryMessage(addr string, header *internal.QueryMessageReq
 	cmd := remote.NewRemotingCommand(internal.ReqQueryMessage, header, nil)
 	cmd.ExtFields["_UNIQUE_KEY_QUERY"] = strconv.FormatBool(isUnqiKey)
 	c.Cli.InvokeAsync(context.Background(), internal.BrokerVIPChannel(addr), cmd, callbak)
+}
+
+func (c *MqClientApi) viewMessage(addr string, phyoffset int64) (*MessageView, error) {
+	header := &internal.ViewMessageRequestHeader{
+		Offset: phyoffset,
+	}
+	cmd := remote.NewRemotingCommand(internal.ReqViewMessageByID, header, nil)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if err != nil {
+		rlog.Error("view messageById error", map[string]interface{}{
+			rlog.LogKeyMessages: err,
+		})
+	}
+	if response == nil {
+		return nil, errors.New("远程响应失败！")
+	}
+	if response.Code != 0 {
+		return nil, primitive.NewMQBrokerErr(response.Code, response.Remark)
+	}
+	var view MessageView
+	msgList := primitive.DecodeMessage(response.Body)
+	if len(msgList) > 0 {
+		view = MessageView{
+			MessageExt: msgList[0],
+		}
+		view.MessageBody = string(view.Body)
+	}
+	return &view, nil
 }
 
 func (c *MqClientApi) ConsumeMessageDirectly(addr, group, clientId, msgId string) (*internal.ConsumeMessageDirectlyResult, error) {

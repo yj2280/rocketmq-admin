@@ -3,12 +3,14 @@ package admin
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/slh92/rocketmq-admin/consumer"
 	"github.com/slh92/rocketmq-admin/internal"
 	"github.com/slh92/rocketmq-admin/internal/remote"
 	"github.com/slh92/rocketmq-admin/internal/utils"
 	"github.com/slh92/rocketmq-admin/primitive"
 	"github.com/slh92/rocketmq-admin/rlog"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -27,28 +29,50 @@ const (
 )
 
 type MqConsumerApi struct {
-	Cli internal.RMQClient
+	Cli      internal.RMQClient
+	Consumer *consumer.DefaultPullConsumer
 }
 
 func GetConsumerApi(cli internal.RMQClient) *MqConsumerApi {
 	consumerApi := &MqConsumerApi{
 		Cli: cli,
 	}
+	consumerApi.Consumer = consumerApi.createConsumer()
 	return consumerApi
 }
 
-func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*MessageView, error) {
+func (c *MqConsumerApi) createConsumer() *consumer.DefaultPullConsumer {
 	nameServ, _ := primitive.NewNamesrvAddr(c.Cli.GetNameSrv().AddrList()[0])
 	pc, _ := consumer.NewPullConsumer(
 		consumer.WithGroupName(utils.TOOLS_CONSUMER_GROUP),
 		consumer.WithNameServer(nameServ),
 		consumer.WithMaxReconsumeTimes(2),
 	)
-	msgList := []*MessageView{}
-	err := pc.Start()
+	return pc
+}
+
+func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*MessageView, error) {
+	if c.Consumer == nil {
+		c.Consumer = c.createConsumer()
+	}
+	selector := consumer.MessageSelector{
+		Type:       consumer.TAG,
+		Expression: "*",
+	}
+	err := c.Consumer.Subscribe(topic, selector)
 	if err != nil {
 		return nil, err
 	}
+	msgList := []*MessageView{}
+	if c.Consumer.ServiceRunningOk() {
+		c.Consumer.Shutdown()
+	}
+	err = c.Consumer.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer c.Consumer.Shutdown()
+	log.Println(topic + "数据拉取开始：" + time.Now().String())
 	queues, err := c.Cli.GetNameSrv().FetchSubscribeMessageQueues(topic)
 	if err != nil {
 		return nil, err
@@ -57,12 +81,15 @@ func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*
 	for _, queue := range queues {
 		minOffset, _ := c.searchOffset(queue, begin)
 		maxOffset, _ := c.searchOffset(queue, end)
+		if minOffset < 0 || maxOffset < 0 {
+			continue
+		}
 	READQ:
 		for off := minOffset; off <= maxOffset; {
-			if len(msgList) > 2000 {
+			if len(OptSortUtil.GetData()) > 2000 {
 				break
 			}
-			pullres, err := pc.PullFrom(context.Background(), queue, off, 32)
+			pullres, err := c.Consumer.PullFrom(context.Background(), queue, off, 32)
 			if err != nil {
 				continue
 			}
@@ -74,14 +101,24 @@ func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*
 					if ext.StoreTimestamp < begin || ext.StoreTimestamp > end {
 						continue
 					}
-					view := MessageView(*ext)
+					view := MessageView{
+						MessageExt: ext,
+					}
+					if view.GetProperty(primitive.PropertyUniqueClientMessageIdKeyIndex) != "" {
+						view.MsgId = view.OffsetMsgId
+					}
 					OptSortUtil.addData(&view)
 				}
 
 				break
 			case primitive.PullNoNewMsg:
+				log.Printf("PullNoNewMsg:%s,offset=%d\n", topic, off)
+				break READQ
 			case primitive.PullNoMsgMatched:
+				log.Println("PullNoMsgMatched:%s,offset=%d\n", topic, off)
+				break READQ
 			case primitive.PullOffsetIllegal:
+				log.Println("PullOffsetIllegal:%s,offset=%d\n", topic, off)
 				break READQ
 			}
 
@@ -92,6 +129,7 @@ func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*
 	for _, comparable := range OptSortUtil.GetData() {
 		msgList = append(msgList, comparable.(*MessageView))
 	}
+	log.Println(topic + "数据拉取结束：" + time.Now().String())
 	return msgList, nil
 }
 
@@ -116,16 +154,11 @@ func (c *MqConsumerApi) ViewMessage(topic, msgId string) (map[string]interface{}
 }
 
 func (c *MqConsumerApi) viewMessage(topic, msgId string) (*MessageView, []*MessageTrack, error) {
-	res, err := c.queryMessage(topic, msgId, 32, 0, time.Now().UnixMilli(), true)
+	view, err := c.viewMessageComplex(topic, msgId)
 	if err != nil {
 		return nil, nil, err
 	}
-	var view *MessageView
 	var tracks []*MessageTrack
-	if res != nil && len(res.MessageList) > 0 {
-		view = res.MessageList[0]
-	}
-
 	if view != nil {
 		tracks, err = c.messageTrackDetail(view)
 		if err != nil {
@@ -133,6 +166,38 @@ func (c *MqConsumerApi) viewMessage(topic, msgId string) (*MessageView, []*Messa
 		}
 	}
 	return view, tracks, nil
+}
+
+func (c *MqConsumerApi) viewMessageComplex(topic, msgId string) (*MessageView, error) {
+	view, err := c.GetMessageById(msgId)
+	if err != nil {
+		return c.GetMessageByUniqKey(topic, msgId)
+	}
+	return view, nil
+}
+
+func (c *MqConsumerApi) GetMessageById(msgId string) (*MessageView, error) {
+	messageID, err := primitive.UnmarshalMsgID([]byte(msgId))
+	if err != nil {
+		return nil, err
+	}
+	addr := fmt.Sprintf("%s:%d", messageID.Addr, messageID.Port)
+	res, err := GetClientApi(c.Cli).viewMessage(addr, messageID.Offset)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (c *MqConsumerApi) GetMessageByUniqKey(topic, uniqKey string) (*MessageView, error) {
+	res, err := c.queryMessage(topic, uniqKey, 32, primitive.GetNearlyTimeFromID(uniqKey).Unix()-1000, int64(9223372036854775807), true)
+	if err != nil {
+		return nil, err
+	}
+	if res != nil && len(res.MessageList) > 0 {
+		return res.MessageList[0], nil
+	}
+	return nil, errors.New("数据获取失败")
 }
 
 func (c *MqConsumerApi) messageTrackDetail(view *MessageView) ([]*MessageTrack, error) {
@@ -163,7 +228,7 @@ func (c *MqConsumerApi) messageTrackDetail(view *MessageView) ([]*MessageTrack, 
 		cc, err := GetClientApi(c.Cli).ExamineConsumerConnectionInfo(group)
 		if err != nil {
 			if primitive.IsMQBrokerErr(err) {
-				if err.(primitive.MQBrokerErr).ResponseCode == 206 {
+				if err.(*primitive.MQBrokerErr).ResponseCode == 206 {
 					mt.TrackType = string(NOT_ONLINE)
 				}
 			}
@@ -179,11 +244,11 @@ func (c *MqConsumerApi) messageTrackDetail(view *MessageView) ([]*MessageTrack, 
 			ifConsumed, err := c.consumed(view, group)
 			if err != nil {
 				if primitive.IsMQClientErr(err) {
-					if err.(primitive.MQClientErr).Code == 206 {
+					if err.(*primitive.MQClientErr).Code == 206 {
 						mt.TrackType = string(NOT_ONLINE)
 					}
 				} else if primitive.IsMQBrokerErr(err) {
-					if err.(primitive.MQBrokerErr).ResponseCode == 206 {
+					if err.(*primitive.MQBrokerErr).ResponseCode == 206 {
 						mt.TrackType = string(NOT_ONLINE)
 					}
 				}
@@ -275,6 +340,7 @@ func (c *MqConsumerApi) queryMessage(topic, key string, maxNum int, begin, end i
 			}
 			for _, addr := range brokerAddrs {
 				GetClientApi(c.Cli).queryMessage(addr, header, func(command *remote.RemotingCommand, err error) {
+					defer wg.Done()
 					if command != nil {
 						switch command.Code {
 						case 0:
@@ -284,7 +350,7 @@ func (c *MqConsumerApi) queryMessage(topic, key string, maxNum int, begin, end i
 							remoteSai := &RemotingSerializable{}
 							_, err := remoteSai.Decode(command.Body, &msgExt)
 							if err != nil {
-								rlog.Error("Fetch all query broker message decode error", map[string]interface{}{
+								rlog.Error("Fetch all query message decode error", map[string]interface{}{
 									rlog.LogKeyMessages: err,
 								})
 								return
@@ -303,7 +369,7 @@ func (c *MqConsumerApi) queryMessage(topic, key string, maxNum int, begin, end i
 							})
 						}
 					}
-					wg.Done()
+
 				}, isUniqKey)
 			}
 			wg.Wait()

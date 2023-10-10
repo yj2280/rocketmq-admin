@@ -69,24 +69,24 @@ const (
 )
 
 type Message struct {
-	Topic          string
-	Body           []byte
-	CompressedBody []byte
-	Flag           int32
-	TransactionId  string
-	Batch          bool
-	Compress       bool
+	Topic          string `json:"topic"`
+	Body           []byte `json:"body"`
+	CompressedBody []byte `json:"compressedBody"`
+	Flag           int32  `json:"flag"`
+	TransactionId  string `json:"transactionId"`
+	Batch          bool   `json:"batch"`
+	Compress       bool   `json:"compress"`
 	// Queue is the queue that messages will be sent to. the value must be set if want to custom the queue of message,
 	// just ignore if not.
-	Queue *MessageQueue
+	Queue *MessageQueue `json:"queue"`
 
-	properties map[string]string
-	mutex      sync.RWMutex
+	Properties map[string]string `json:"properties"`
+	mutex      sync.RWMutex      `json:"mutex"`
 }
 
 func (m *Message) WithProperties(p map[string]string) {
 	m.mutex.Lock()
-	m.properties = p
+	m.Properties = p
 	m.mutex.Unlock()
 }
 
@@ -95,16 +95,16 @@ func (m *Message) WithProperty(key, value string) {
 		return
 	}
 	m.mutex.Lock()
-	if m.properties == nil {
-		m.properties = make(map[string]string)
+	if m.Properties == nil {
+		m.Properties = make(map[string]string)
 	}
-	m.properties[key] = value
+	m.Properties[key] = value
 	m.mutex.Unlock()
 }
 
 func (m *Message) GetProperty(key string) string {
 	m.mutex.RLock()
-	v := m.properties[key]
+	v := m.Properties[key]
 	m.mutex.RUnlock()
 	return v
 }
@@ -112,18 +112,18 @@ func (m *Message) GetProperty(key string) string {
 func (m *Message) RemoveProperty(key string) string {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	value, exist := m.properties[key]
+	value, exist := m.Properties[key]
 	if !exist {
 		return ""
 	}
-	delete(m.properties, key)
+	delete(m.Properties, key)
 	return value
 }
 func (m *Message) MarshallProperties() string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	buffer := bytes.NewBufferString("")
-	for k, v := range m.properties {
+	for k, v := range m.Properties {
 		buffer.WriteString(k)
 		buffer.WriteRune(nameValueSeparator)
 		buffer.WriteString(v)
@@ -136,14 +136,14 @@ func (m *Message) MarshallProperties() string {
 func (m *Message) UnmarshalProperties(data []byte) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	if m.properties == nil {
-		m.properties = make(map[string]string)
+	if m.Properties == nil {
+		m.Properties = make(map[string]string)
 	}
 	items := bytes.Split(data, []byte{propertySeparator})
 	for _, item := range items {
 		kv := bytes.Split(item, []byte{nameValueSeparator})
 		if len(kv) == 2 {
-			m.properties[string(kv[0])] = string(kv[1])
+			m.Properties[string(kv[0])] = string(kv[1])
 		}
 	}
 }
@@ -151,8 +151,8 @@ func (m *Message) UnmarshalProperties(data []byte) {
 func (m *Message) GetProperties() map[string]string {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	result := make(map[string]string, len(m.properties))
-	for k, v := range m.properties {
+	result := make(map[string]string, len(m.Properties))
+	for k, v := range m.Properties {
 		result[k] = v
 	}
 	return result
@@ -162,7 +162,7 @@ func NewMessage(topic string, body []byte) *Message {
 	msg := &Message{
 		Topic:      topic,
 		Body:       body,
-		properties: make(map[string]string),
+		Properties: make(map[string]string),
 	}
 	//msg.properties[PropertyWaitStoreMsgOk] = strconv.FormatBool(true)
 	return msg
@@ -205,7 +205,7 @@ func (m *Message) GetShardingKey() string {
 
 func (m *Message) String() string {
 	return fmt.Sprintf("[topic=%s, body=%s, Flag=%d, properties=%v, TransactionId=%s]",
-		m.Topic, string(m.Body), m.Flag, m.properties, m.TransactionId)
+		m.Topic, string(m.Body), m.Flag, m.Properties, m.TransactionId)
 }
 
 func (m *Message) Marshal() []byte {
@@ -239,19 +239,19 @@ func (m *Message) Marshal() []byte {
 
 type MessageExt struct {
 	Message
-	MsgId                     string
-	OffsetMsgId               string
-	StoreSize                 int32
-	QueueOffset               int64
-	SysFlag                   int32
-	BornTimestamp             int64
-	BornHost                  string
-	StoreTimestamp            int64
-	StoreHost                 string
-	CommitLogOffset           int64
-	BodyCRC                   int32
-	ReconsumeTimes            int32
-	PreparedTransactionOffset int64
+	MsgId                     string `json:"msgId"`
+	OffsetMsgId               string `json:"offsetMsgId"`
+	StoreSize                 int32  `json:"storeSize"`
+	QueueOffset               int64  `json:"queueOffset"`
+	SysFlag                   int32  `json:"sysFlag"`
+	BornTimestamp             int64  `json:"bornTimestamp"`
+	BornHost                  string `json:"bornHost"`
+	StoreTimestamp            int64  `json:"storeTimestamp"`
+	StoreHost                 string `json:"storeHost"`
+	CommitLogOffset           int64  `json:"commitLogOffset"`
+	BodyCRC                   int32  `json:"bodyCRC"`
+	ReconsumeTimes            int32  `json:"reconsumeTimes"`
+	PreparedTransactionOffset int64  `json:"preparedTransactionOffset"`
 }
 
 func (msgExt *MessageExt) GetTags() string {
@@ -387,8 +387,8 @@ func DecodeMessage(data []byte) []*MessageExt {
 
 		msg.OffsetMsgId = CreateMessageId(hostBytes, port, msg.CommitLogOffset)
 		//count += 16
-		if msg.properties == nil {
-			msg.properties = make(map[string]string, 0)
+		if msg.Properties == nil {
+			msg.Properties = make(map[string]string, 0)
 		}
 		msgID := msg.GetProperty(PropertyUniqueClientMessageIdKeyIndex)
 		if len(msgID) == 0 {
@@ -580,4 +580,37 @@ func updateTimestamp() {
 
 func Pid() int16 {
 	return int16(os.Getpid())
+}
+
+func GetNearlyTimeFromID(msgID string) time.Time {
+	// 将消息ID转换为字节数组
+	bytes := []byte(msgID)
+
+	// 创建一个长度为8的字节缓冲区
+	buf := make([]byte, 8)
+
+	// 将字节缓冲区的前4个字节设置为0
+	copy(buf[:4], []byte{0, 0, 0, 0})
+
+	// 将字节缓冲区的后4个字节设置为消息ID的第10到13个字节
+	copy(buf[4:], bytes[10:14])
+
+	// 解析缓冲区中的时间戳
+	spanMS := int64(binary.BigEndian.Uint64(buf))
+
+	// 获取当前时间
+	now := time.Now().Unix()
+
+	// 设置日历为每月1号的零点
+	cal := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	// 计算上个月1号的时间戳
+	if cal.UnixNano()/int64(time.Millisecond)+spanMS >= now*1000 {
+		cal = cal.AddDate(0, -1, 0)
+	}
+
+	// 将时间戳添加到日历上
+	cal = cal.Add(time.Duration(spanMS) * time.Millisecond)
+
+	return cal
 }

@@ -30,8 +30,8 @@ type MessageModel string
 type ConsumeFromWhere string
 
 const (
-	CONSUME_ACTIVELY                                      = ConsumeType("PULL")
-	CONSUME_PASSIVELY                                     = ConsumeType("PUSH")
+	CONSUME_ACTIVELY                                      = ConsumeType("CONSUME_ACTIVELY")
+	CONSUME_PASSIVELY                                     = ConsumeType("CONSUME_PASSIVELY")
 	BROADCASTING                                          = MessageModel("BROADCASTING")
 	CLUSTERING                                            = MessageModel("CLUSTERING")
 	CONSUME_FROM_LAST_OFFSET                              = ConsumeFromWhere("CONSUME_FROM_LAST_OFFSET")
