@@ -199,3 +199,8 @@ type ConsumeMessageDirectlyResult struct {
 	SpentTimeMills int64  `json:"spentTimeMills"`
 	RemotingSerializable
 }
+
+type KVTable struct {
+	Table map[string]string `json:"table"`
+	RemotingSerializable
+}

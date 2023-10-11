@@ -83,3 +83,28 @@ func localhostName() string {
 	}
 	return hostname
 }
+
+func (u *MixAll) StringToProperties(str string) map[string]string {
+	properties := make(map[string]string)
+
+	lines := strings.Split(str, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if len(line) == 0 || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		index := strings.Index(line, "=")
+		if index == -1 {
+			index = strings.Index(line, ":")
+		}
+
+		if index != -1 {
+			key := strings.TrimSpace(line[:index])
+			value := strings.TrimSpace(line[index+1:])
+			properties[key] = value
+		}
+	}
+
+	return properties
+}

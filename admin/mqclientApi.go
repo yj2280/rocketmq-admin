@@ -523,3 +523,45 @@ func (c *MqClientApi) CreateSubscriptionGroup(addr string, config *SubscriptionG
 	}
 	return nil
 }
+
+func (c *MqClientApi) getBrokerRuntimeInfo(addr string) (*KVTable, error) {
+	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerRuntimeInfo, nil, nil)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if err != nil {
+		rlog.Error("get broker runtimeinfo error", map[string]interface{}{
+			rlog.LogKeyMessages: err,
+		})
+		return nil, err
+	}
+	if response == nil {
+		return nil, errors.New("远程响应失败！")
+	}
+	if response.Code != 0 {
+		return nil, primitive.NewMQBrokerErr(response.Code, response.Remark)
+	}
+	var kv KVTable
+	_, err = kv.Decode(response.Body, &kv)
+	if err != nil {
+		return nil, err
+	}
+	return &kv, nil
+}
+
+func (c *MqClientApi) getBrokerConfig(addr string) (*map[string]string, error) {
+	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerConfig, nil, nil)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	if err != nil {
+		rlog.Error("get broker config error", map[string]interface{}{
+			rlog.LogKeyMessages: err,
+		})
+		return nil, err
+	}
+	if response == nil {
+		return nil, errors.New("远程响应失败！")
+	}
+	if response.Code != 0 {
+		return nil, primitive.NewMQBrokerErr(response.Code, response.Remark)
+	}
+	kv := utils.MixAllUtil.StringToProperties(string(response.Body))
+	return &kv, nil
+}
