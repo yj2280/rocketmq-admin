@@ -68,6 +68,8 @@ func init() {
 		if err == nil {
 			_VIPChannelEnable = value
 		}
+	} else {
+		_VIPChannelEnable = true
 	}
 }
 

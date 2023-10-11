@@ -190,3 +190,12 @@ type QueryResult struct {
 type Comparable interface {
 	CompareTo(o interface{}) int
 }
+
+type ConsumeMessageDirectlyResult struct {
+	Order          bool   `json:"order"`
+	AutoCommit     bool   `json:"autoCommit"`
+	ConsumeResult  string `json:"consumeResult"`
+	Remark         string `json:"remark"`
+	SpentTimeMills int64  `json:"spentTimeMills"`
+	RemotingSerializable
+}

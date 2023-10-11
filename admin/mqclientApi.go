@@ -430,6 +430,7 @@ func (c *MqClientApi) GetBrokerClusterInfo() (*ClusterInfo, error) {
 		rlog.Error("Fetch all clusterinfo list error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
 		})
+		return nil, err
 	}
 	var cluster ClusterInfo
 	_, err = cluster.Decode(res.Body, &cluster)
@@ -458,6 +459,7 @@ func (c *MqClientApi) viewMessage(addr string, phyoffset int64) (*MessageView, e
 		rlog.Error("view messageById error", map[string]interface{}{
 			rlog.LogKeyMessages: err,
 		})
+		return nil, err
 	}
 	if response == nil {
 		return nil, errors.New("远程响应失败！")
@@ -476,23 +478,28 @@ func (c *MqClientApi) viewMessage(addr string, phyoffset int64) (*MessageView, e
 	return &view, nil
 }
 
-func (c *MqClientApi) ConsumeMessageDirectly(addr, group, clientId, msgId string) (*internal.ConsumeMessageDirectlyResult, error) {
+func (c *MqClientApi) ConsumeMessageDirectly(addr, group, clientId, msgId string) (*ConsumeMessageDirectlyResult, error) {
 	header := &internal.ConsumeMessageDirectlyHeader{
 		ConsumerGroup: group,
 		ClientID:      clientId,
 		MsgId:         msgId,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqConsumeMessageDirectly, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 20*time.Second)
+	if err != nil {
+		rlog.Error("ConsumeMessageDirectly error", map[string]interface{}{
+			rlog.LogKeyMessages: err,
+		})
+		return nil, err
+	}
 	if response == nil {
 		return nil, errors.New("远程响应失败！")
 	}
 	if response.Code != 0 {
 		return nil, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
-	var directRes internal.ConsumeMessageDirectlyResult
-	serizable := &RemotingSerializable{}
-	_, err := serizable.Decode(response.Body, &directRes)
+	var directRes ConsumeMessageDirectlyResult
+	_, err = directRes.Decode(response.Body, &directRes)
 	if err != nil {
 		return nil, err
 	}

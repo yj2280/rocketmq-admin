@@ -104,9 +104,7 @@ func (c *MqConsumerApi) QueryMessageByTopic(topic string, begin, end int64) ([]*
 					view := MessageView{
 						MessageExt: ext,
 					}
-					if view.GetProperty(primitive.PropertyUniqueClientMessageIdKeyIndex) != "" {
-						view.MsgId = view.OffsetMsgId
-					}
+					view.MsgId = view.OffsetMsgId
 					OptSortUtil.addData(&view)
 				}
 
@@ -147,6 +145,7 @@ func (c *MqConsumerApi) ViewMessage(topic, msgId string) (map[string]interface{}
 	if err != nil {
 		return nil, err
 	}
+	view.MsgId = view.OffsetMsgId
 	data["messageView"] = view
 	data["messageTrackList"] = tracks
 	return data, nil
@@ -171,7 +170,10 @@ func (c *MqConsumerApi) viewMessage(topic, msgId string) (*MessageView, []*Messa
 func (c *MqConsumerApi) viewMessageComplex(topic, msgId string) (*MessageView, error) {
 	view, err := c.GetMessageById(msgId)
 	if err != nil {
-		return c.GetMessageByUniqKey(topic, msgId)
+		view, err = c.GetMessageByUniqKey(topic, msgId)
+	}
+	if err != nil {
+		return nil, err
 	}
 	return view, nil
 }
@@ -195,7 +197,9 @@ func (c *MqConsumerApi) GetMessageByUniqKey(topic, uniqKey string) (*MessageView
 		return nil, err
 	}
 	if res != nil && len(res.MessageList) > 0 {
-		return res.MessageList[0], nil
+		view := res.MessageList[0]
+		view.MessageBody = string(view.Body)
+		return view, nil
 	}
 	return nil, errors.New("数据获取失败")
 }
@@ -346,19 +350,25 @@ func (c *MqConsumerApi) queryMessage(topic, key string, maxNum int, begin, end i
 						case 0:
 							respHeader := new(QueryMessageResponseHeader)
 							respHeader.Decode(command.ExtFields)
-							msgExt := []*MessageView{}
-							remoteSai := &RemotingSerializable{}
-							_, err := remoteSai.Decode(command.Body, &msgExt)
+							//remoteSai := &RemotingSerializable{}
+							msgExt := primitive.DecodeMessage(command.Body)
+							/*_, err := remoteSai.Decode(command.Body, &msgExt)
 							if err != nil {
 								rlog.Error("Fetch all query message decode error", map[string]interface{}{
 									rlog.LogKeyMessages: err,
 								})
 								return
-							}
+							}*/
 							qr := &QueryResult{
 								IndexLastUpdateTimestamp: respHeader.IndexLastUpdateTimestamp,
-								MessageList:              msgExt,
 							}
+							for _, ext := range msgExt {
+								view := &MessageView{
+									MessageExt: ext,
+								}
+								qr.MessageList = append(qr.MessageList, view)
+							}
+
 							mu.Lock()
 							queryResultList = append(queryResultList, qr)
 							defer mu.Unlock()
@@ -382,18 +392,19 @@ func (c *MqConsumerApi) queryMessage(topic, key string, maxNum int, begin, end i
 				for _, view := range queryResult.MessageList {
 					if isUniqKey {
 						if view.MsgId != key {
+							rlog.Warning("queryMessage by uniqKey, find message key not matched, maybe hash duplicate", map[string]interface{}{
+								rlog.LogKeyMessages: view.String(),
+							})
 							continue
 						}
-						if len(msgList) == 0 {
+						if len(msgList) > 0 {
+							if msgList[0].StoreTimestamp > view.StoreTimestamp {
+								msgList = []*MessageView{}
+								msgList = append(msgList, view)
+							}
 							continue
-						}
-						if msgList[0].StoreTimestamp > view.StoreTimestamp {
-							msgList = []*MessageView{}
 						}
 						msgList = append(msgList, view)
-						rlog.Error("queryMessage by uniqKey, find message key not matched, maybe hash duplicate", map[string]interface{}{
-							rlog.LogKeyMessages: view.String(),
-						})
 
 					} else {
 						if view.GetKeys() == "" {

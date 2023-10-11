@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"errors"
-	"github.com/slh92/rocketmq-admin/internal"
 	"github.com/slh92/rocketmq-admin/internal/utils"
 	"github.com/slh92/rocketmq-admin/primitive"
 	"github.com/slh92/rocketmq-admin/producer"
@@ -24,7 +23,7 @@ func (a *MqAdmin) QueryMessageByTopicAndKey(topic, key string) ([]*MessageView, 
 func (a *MqAdmin) ViewMessage(topic, msgId string) (map[string]interface{}, error) {
 	return GetConsumerApi(a.Cli).ViewMessage(topic, msgId)
 }
-func (a *MqAdmin) ConsumeMessageDirectly(topic, group, clientId, msgId string) (*internal.ConsumeMessageDirectlyResult, error) {
+func (a *MqAdmin) ConsumeMessageDirectly(topic, group, clientId, msgId string) (*ConsumeMessageDirectlyResult, error) {
 	if clientId != "" {
 		return a.consumeMessageDirectlyForMsg(group, topic, msgId, clientId)
 	}
@@ -36,12 +35,12 @@ func (a *MqAdmin) ConsumeMessageDirectly(topic, group, clientId, msgId string) (
 		if connection.ClientId == "" {
 			continue
 		}
-		return a.consumeMessageDirectlyForMsg(group, topic, msgId, clientId)
+		return a.consumeMessageDirectlyForMsg(group, topic, msgId, connection.ClientId)
 	}
 	return nil, errors.New("数据发送失败")
 }
 
-func (a *MqAdmin) consumeMessageDirectlyForMsg(group, topic, msgId, clientId string) (*internal.ConsumeMessageDirectlyResult, error) {
+func (a *MqAdmin) consumeMessageDirectlyForMsg(group, topic, msgId, clientId string) (*ConsumeMessageDirectlyResult, error) {
 	msg, err := GetConsumerApi(a.Cli).viewMessageComplex(topic, msgId)
 	if err != nil {
 		return nil, err
@@ -53,7 +52,7 @@ func (a *MqAdmin) consumeMessageDirectlyForMsg(group, topic, msgId, clientId str
 	}
 }
 
-func (a *MqAdmin) consumeMessageDirectly(addr, group, clientId, msgId string) (*internal.ConsumeMessageDirectlyResult, error) {
+func (a *MqAdmin) consumeMessageDirectly(addr, group, clientId, msgId string) (*ConsumeMessageDirectlyResult, error) {
 	return GetClientApi(a.Cli).ConsumeMessageDirectly(addr, group, clientId, msgId)
 }
 
