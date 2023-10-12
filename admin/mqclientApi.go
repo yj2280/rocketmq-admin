@@ -38,7 +38,7 @@ func (c *MqClientApi) InvokeBrokerToResetOffset2(addr, topic, group string, time
 	if isC {
 		cmd.Language = remote.CPP
 	}
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("exec resetOffset error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -76,7 +76,7 @@ func (c *MqClientApi) ExamineConsumeStatsWithTopic(group string, topic string) *
 				Topic:         topic,
 			}
 			cmd := remote.NewRemotingCommand(internal.ReqGetConsumerStatsFromServer, header, nil)
-			response, err := c.Cli.InvokeSync(context.Background(), addr, cmd, 3*time.Second)
+			response, err := c.Cli.InvokeSync(context.Background(), addr, cmd, 10*time.Second)
 			if err != nil {
 				rlog.Error("Fetch all consumerConnectiion list error", map[string]interface{}{
 					rlog.LogKeyUnderlayError: err,
@@ -123,7 +123,7 @@ func (c *MqClientApi) GetConsumeStats(addr, group, topic string) (*ConsumeStats,
 		Topic:         topic,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetConsumerStatsFromServer, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Fetch all consumerConnectiion list error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -173,7 +173,7 @@ func (c *MqClientApi) QueryTopicConsumeByWho(addr, topic string) (*GroupList, er
 		Topic: topic,
 	}
 	cmd := remote.NewRemotingCommand(internal.QueryTopicConsumeByWho, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Fetch all topic consumer error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -206,7 +206,7 @@ func (c *MqClientApi) GetConsumerRunningInfo(addr, group, clientId string, jstac
 		JstackEnable:  jstack,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetConsumerRunningInfo, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Fetch all consumerRunningInfo error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -286,7 +286,7 @@ func (c *MqClientApi) GetConsumerConnectionList(addr, group string) (*ConsumerCo
 		ConsumerGroup: group,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetConsumerConnectionList, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Fetch all consumerConnectiion list error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -318,7 +318,7 @@ func (c *MqClientApi) GetMaxOffset(addr, topic string, queueId int) (int64, erro
 		QueueId: queueId,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetMaxOffset, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Get maxoffset error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -343,7 +343,7 @@ func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp in
 		Timestamp: timestamp,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqSearchOffsetByTimestamp, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Search Offset error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -366,7 +366,7 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 		Topic: topic,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqGetTopicStats, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if response == nil {
 		return nil, errors.New("远程响应失败！")
 	}
@@ -398,7 +398,7 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 
 func (c *MqClientApi) UpdateConsumerOffset(addr string, header *internal.UpdateConsumerOffsetRequestHeader) error {
 	cmd := remote.NewRemotingCommand(internal.ReqUpdateConsumerOffset, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if response == nil {
 		return errors.New("远程响应失败！")
 	}
@@ -413,7 +413,7 @@ func (c *MqClientApi) DeleteSubscriptionGroup(addr, group string) error {
 		GroupName: group,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqDeleteGroupInBroker, header, nil)
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if response == nil {
 		return errors.New("远程响应失败！")
 	}
@@ -425,7 +425,7 @@ func (c *MqClientApi) DeleteSubscriptionGroup(addr, group string) error {
 
 func (c *MqClientApi) GetBrokerClusterInfo() (*ClusterInfo, error) {
 	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerClusterInfo, nil, nil)
-	res, err := c.Cli.InvokeSync(context.Background(), c.Cli.GetNameSrv().AddrList()[0], cmd, 5*time.Second)
+	res, err := c.Cli.InvokeSync(context.Background(), c.Cli.GetNameSrv().AddrList()[0], cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("Fetch all clusterinfo list error", map[string]interface{}{
 			rlog.LogKeyUnderlayError: err,
@@ -454,7 +454,7 @@ func (c *MqClientApi) viewMessage(addr string, phyoffset int64) (*MessageView, e
 		Offset: phyoffset,
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqViewMessageByID, header, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("view messageById error", map[string]interface{}{
 			rlog.LogKeyMessages: err,
@@ -514,7 +514,7 @@ func (c *MqClientApi) CreateSubscriptionGroup(addr string, config *SubscriptionG
 		return err
 	}
 	cmd.Body = body
-	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if response == nil {
 		return errors.New("远程响应失败！")
 	}
@@ -526,7 +526,7 @@ func (c *MqClientApi) CreateSubscriptionGroup(addr string, config *SubscriptionG
 
 func (c *MqClientApi) getBrokerRuntimeInfo(addr string) (*KVTable, error) {
 	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerRuntimeInfo, nil, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("get broker runtimeinfo error", map[string]interface{}{
 			rlog.LogKeyMessages: err,
@@ -549,7 +549,7 @@ func (c *MqClientApi) getBrokerRuntimeInfo(addr string) (*KVTable, error) {
 
 func (c *MqClientApi) getBrokerConfig(addr string) (*map[string]string, error) {
 	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerConfig, nil, nil)
-	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 3*time.Second)
+	response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)
 	if err != nil {
 		rlog.Error("get broker config error", map[string]interface{}{
 			rlog.LogKeyMessages: err,

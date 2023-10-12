@@ -152,12 +152,12 @@ type ConsumerConfigInfo struct {
 }
 
 type ConnectionInfo struct {
-	*Connection
+	Connection
 	VersionDesc string `json:"versionDesc"`
 }
 
 type ConsumerConnectionInfo struct {
-	ConnectionSet []ConnectionInfo `json:"connectionSet"`
+	ConnectionSet []*ConnectionInfo `json:"connectionSet"`
 	*ConsumerConnection
 }
 

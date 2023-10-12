@@ -16,13 +16,13 @@ func (a *MqAdmin) GetConsumerConnectionInfo(group string) (*ConsumerConnectionIn
 	if err != nil {
 		return nil, err
 	}
-	connSet := []ConnectionInfo{}
+	connSet := []*ConnectionInfo{}
 	for _, connection := range consumerConn.ConnectionSet {
 		connInfo := &ConnectionInfo{
 			VersionDesc: GetVersionDesc(connection.Version),
-			Connection:  &connection,
+			Connection:  connection,
 		}
-		connSet = append(connSet, *connInfo)
+		connSet = append(connSet, connInfo)
 	}
 	data := &ConsumerConnectionInfo{
 		ConnectionSet:      connSet,

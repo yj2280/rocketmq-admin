@@ -49,12 +49,12 @@ const (
 )
 
 func (lc LanguageCode) MarshalJSON() ([]byte, error) {
-	return []byte(`"GO"`), nil
+	return []byte(lc.String()), nil
 }
 
 func (lc *LanguageCode) UnmarshalJSON(b []byte) error {
 	switch string(b) {
-	case "JAVA":
+	case "JAVA", `"JAVA"`:
 		*lc = _Java
 	case "GO", `"GO"`:
 		*lc = _Go
@@ -67,11 +67,11 @@ func (lc *LanguageCode) UnmarshalJSON(b []byte) error {
 func (lc LanguageCode) String() string {
 	switch lc {
 	case _Java:
-		return "JAVA"
+		return `"JAVA"`
 	case _Go:
-		return "GO"
+		return `"GO"`
 	default:
-		return "unknown"
+		return `"UNHOKN"`
 	}
 }
 
