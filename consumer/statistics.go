@@ -211,43 +211,53 @@ func (sis *statsItemSet) init() {
 	})
 
 	go primitive.WithRecover(func() {
-		time.Sleep(nextMinutesTime().Sub(time.Now()))
+		slt := time.NewTicker(nextMinutesTime().Sub(time.Now()))
 		ticker := time.NewTicker(time.Minute)
-		defer ticker.Stop()
+		defer slt.Stop()
 		for {
 			select {
 			case <-sis.closed:
 				return
 			case <-ticker.C:
 				sis.printAtMinutes()
+				break
+			case <-slt.C:
+				ticker = time.NewTicker(time.Minute)
 			}
 		}
 	})
 
 	go primitive.WithRecover(func() {
-		time.Sleep(nextHourTime().Sub(time.Now()))
+
+		slt := time.NewTicker(nextHourTime().Sub(time.Now()))
 		ticker := time.NewTicker(time.Hour)
-		defer ticker.Stop()
+		defer slt.Stop()
 		for {
 			select {
 			case <-sis.closed:
 				return
 			case <-ticker.C:
 				sis.printAtHour()
+				break
+			case <-slt.C:
+				ticker = time.NewTicker(time.Hour)
 			}
 		}
 	})
 
 	go primitive.WithRecover(func() {
-		time.Sleep(nextMonthTime().Sub(time.Now()))
+		slt := time.NewTicker(nextMonthTime().Sub(time.Now()))
 		ticker := time.NewTicker(24 * time.Hour)
-		defer ticker.Stop()
+		defer slt.Stop()
 		for {
 			select {
 			case <-sis.closed:
 				return
 			case <-ticker.C:
 				sis.printAtDay()
+				break
+			case <-slt.C:
+				ticker = time.NewTicker(24 * time.Hour)
 			}
 		}
 	})
