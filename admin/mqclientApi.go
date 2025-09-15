@@ -3,13 +3,14 @@ package admin
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/slh92/rocketmq-admin/internal"
 	"github.com/slh92/rocketmq-admin/internal/remote"
 	"github.com/slh92/rocketmq-admin/internal/utils"
 	"github.com/slh92/rocketmq-admin/primitive"
 	"github.com/slh92/rocketmq-admin/rlog"
-	"strconv"
-	"time"
 )
 
 type MqClientApi struct {
@@ -394,6 +395,46 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 		stats.OffsetTable[queue] = val
 	}
 	return &stats, nil
+}
+
+func (c *MqClientApi) getSystemTopicList(addr, topic string) (*TopicList, error) {
+	//private RemotingCommand getRemotingCommand(int code) {
+	//	RegisterBrokerRequestHeader header = new RegisterBrokerRequestHeader();
+	//	header.setBrokerName("broker");
+	//	RemotingCommand request = RemotingCommand.createRequestCommand(code, header);
+	//	request.addExtField("brokerName", "broker");
+	//	request.addExtField("brokerAddr", "10.10.1.1");
+	//	request.addExtField("clusterName", "cluster");
+	//	request.addExtField("haServerAddr", "10.10.2.1");
+	//	request.addExtField("brokerId", "2333");
+	//	request.addExtField("topic", "unit-test");
+	//	return request;
+	//}
+
+	header := &internal.GetTopicStatsInfoRequestHeader{
+		Topic: topic,
+	}
+
+	cmd := remote.NewRemotingCommand(internal.GET_SYSTEM_TOPIC_LIST_FROM_NS, header, nil)
+	response, err := c.Cli.InvokeSync(context.Background(), c.Cli.GetNameSrv().AddrList()[0], cmd, 3*time.Second)
+
+	if err != nil {
+		rlog.Error("Fetch system topic list error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch system topic list success", map[string]interface{}{})
+	}
+	var topicList TopicList
+	_, err = topicList.Decode(response.Body, &topicList)
+	if err != nil {
+		rlog.Error("Fetch system topic list decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return &topicList, nil
 }
 
 func (c *MqClientApi) UpdateConsumerOffset(addr string, header *internal.UpdateConsumerOffsetRequestHeader) error {

@@ -60,6 +60,7 @@ const (
 	ReqGetConsumerStatsFromClient    = int16(221)
 	ReqInvokeBrokerToResetOffset     = int16(222)
 	QueryTopicConsumeByWho           = int16(300)
+	GET_SYSTEM_TOPIC_LIST_FROM_NS    = int16(304)
 	ReqGetConsumerRunningInfo        = int16(307)
 	ReqConsumeMessageDirectly        = int16(309)
 	ReqSendReplyMessage              = int16(324)
