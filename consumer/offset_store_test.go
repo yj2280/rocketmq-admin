@@ -22,10 +22,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/primitive"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 func TestNewLocalFileOffsetStore(t *testing.T) {

@@ -18,7 +18,7 @@ limitations under the License.
 package primitive
 
 import (
-	"github.com/slh92/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/errors"
 	"regexp"
 	"strings"
 )

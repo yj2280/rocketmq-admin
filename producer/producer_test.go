@@ -19,15 +19,15 @@ package producer
 
 import (
 	"context"
-	"github.com/slh92/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 const (

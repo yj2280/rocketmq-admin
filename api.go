@@ -21,10 +21,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/slh92/rocketmq-admin/consumer"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/primitive"
-	"github.com/slh92/rocketmq-admin/producer"
+	"github.com/yj2280/rocketmq-admin/consumer"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/producer"
 )
 
 type Producer interface {

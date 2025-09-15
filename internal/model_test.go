@@ -19,15 +19,15 @@ package internal
 
 import (
 	"encoding/json"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/tidwall/gjson"
 
-	"github.com/slh92/rocketmq-admin/internal/utils"
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 func TestHeartbeatData(t *testing.T) {

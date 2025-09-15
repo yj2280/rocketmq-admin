@@ -28,15 +28,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	errors2 "github.com/slh92/rocketmq-admin/errors"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/internal/utils"
+	errors2 "github.com/yj2280/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
 
 	"github.com/pkg/errors"
 
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/primitive"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/rlog"
 )
 
 // ErrNoNewMsg returns a "no new message found". Occurs only when no new message found from broker

@@ -20,7 +20,7 @@ package consumer
 import (
 	"sync"
 
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 type QueueLock struct {

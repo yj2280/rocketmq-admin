@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 )
 
 // resolver for nameserver, monitor change of nameserver and notify client

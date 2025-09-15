@@ -19,8 +19,8 @@ package main
 
 import (
 	"flag"
-	"github.com/slh92/rocketmq-admin/errors"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/rlog"
 	"os"
 	"os/signal"
 	"syscall"

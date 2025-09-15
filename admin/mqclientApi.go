@@ -3,13 +3,15 @@ package admin
 import (
 	"context"
 	"errors"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/internal/utils"
-	"github.com/slh92/rocketmq-admin/primitive"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
+	"github.com/yj2280/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/rlog"
 )
 
 type MqClientApi struct {
@@ -394,6 +396,67 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 		stats.OffsetTable[queue] = val
 	}
 	return &stats, nil
+}
+
+func (c *MqClientApi) GetSystemTopicList(client *MqAdmin) (*TopicList, error) {
+
+	for _, nameServer := range c.Cli.GetNameSrv().AddrList() {
+		cmd := remote.NewRemotingCommand(internal.GET_SYSTEM_TOPIC_LIST_FROM_NS, nil, nil)
+		response, err := c.Cli.InvokeSync(context.Background(), nameServer, cmd, 3*time.Second)
+		fmt.Println(response, err)
+	}
+	brokerNameList := make([]string, 0)
+	clusterInfo, err := GetClientApi(client.Cli).GetBrokerClusterInfo()
+	fmt.Println("clusterInfo", clusterInfo, err)
+	for _, brokerAddr := range clusterInfo.BrokerAddrTable {
+		brokerNameList = append(brokerNameList, brokerAddr.BrokerAddresses[0])
+	}
+	for _, brokerAddr := range brokerNameList {
+		cmd := remote.NewRemotingCommand(internal.GET_SYSTEM_TOPIC_LIST_FROM_BROKER, nil, nil)
+		response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(brokerAddr), cmd, 10*time.Second)
+		fmt.Println(response, err)
+	}
+	cmd := remote.NewRemotingCommand(internal.GET_SYSTEM_TOPIC_LIST_FROM_NS, nil, nil)
+	response, err := c.Cli.InvokeSync(context.Background(), c.Cli.GetNameSrv().AddrList()[0], cmd, 3*time.Second)
+
+	if err != nil {
+		rlog.Error("Fetch system topic list error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch system topic list success", map[string]interface{}{})
+	}
+	var topicList TopicList
+	_, err = topicList.Decode(response.Body, &topicList)
+	if err != nil {
+		rlog.Error("Fetch system topic list decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return &topicList, nil
+}
+
+func (c *MqClientApi) GetSystemTopicListFromBrokerList(brokerAddrList []string) (map[string]TopicList, error) {
+	topicMap := make(map[string]TopicList)
+	for _, brokerAddr := range brokerAddrList {
+		cmd := remote.NewRemotingCommand(internal.GET_SYSTEM_TOPIC_LIST_FROM_BROKER, nil, nil)
+		response, err := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(brokerAddr), cmd, 10*time.Second)
+		var topicList TopicList
+		if err != nil {
+			rlog.Error("Fetch System topic list error", map[string]interface{}{
+				rlog.LogKeyUnderlayError: err,
+			})
+			return nil, err
+		} else {
+			rlog.Info("Fetch system topic list success", map[string]interface{}{})
+		}
+		_, err = topicList.Decode(response.Body, &topicList)
+		topicMap[brokerAddr] = topicList
+	}
+
+	return topicMap, nil
 }
 
 func (c *MqClientApi) UpdateConsumerOffset(addr string, header *internal.UpdateConsumerOffsetRequestHeader) error {

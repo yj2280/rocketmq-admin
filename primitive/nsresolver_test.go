@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

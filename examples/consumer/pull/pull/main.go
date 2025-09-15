@@ -22,12 +22,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/slh92/rocketmq-admin"
+	"github.com/yj2280/rocketmq-admin"
 
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 
-	"github.com/slh92/rocketmq-admin/consumer"
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/consumer"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 const (

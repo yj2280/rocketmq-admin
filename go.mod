@@ -1,4 +1,4 @@
-module github.com/slh92/rocketmq-admin
+module github.com/yj2280/rocketmq-admin
 
 go 1.13
 
