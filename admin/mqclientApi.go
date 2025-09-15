@@ -397,7 +397,7 @@ func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, e
 	return &stats, nil
 }
 
-func (c *MqClientApi) getSystemTopicList(addr, topic string) (*TopicList, error) {
+func (c *MqClientApi) GetSystemTopicList(addr, topic string) (*TopicList, error) {
 	//private RemotingCommand getRemotingCommand(int code) {
 	//	RegisterBrokerRequestHeader header = new RegisterBrokerRequestHeader();
 	//	header.setBrokerName("broker");
