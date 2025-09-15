@@ -21,12 +21,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 
 	"github.com/golang/mock/gomock"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/primitive"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 func mockB4Start(c *pushConsumer) {

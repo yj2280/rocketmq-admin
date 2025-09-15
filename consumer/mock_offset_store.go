@@ -25,7 +25,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	primitive "github.com/slh92/rocketmq-admin/primitive"
+	primitive "github.com/yj2280/rocketmq-admin/primitive"
 )
 
 // MockOffsetStore is a mock of OffsetStore interface.

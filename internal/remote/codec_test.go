@@ -18,7 +18,7 @@ package remote
 
 import (
 	"encoding/json"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 	"math/rand"
 	"reflect"
 	"testing"

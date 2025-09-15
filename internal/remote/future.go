@@ -19,7 +19,7 @@ package remote
 
 import (
 	"context"
-	"github.com/slh92/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/errors"
 	"sync"
 )
 

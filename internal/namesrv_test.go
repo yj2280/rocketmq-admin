@@ -19,7 +19,7 @@ package internal
 
 import (
 	"fmt"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/rlog"
 	"net"
 	"net/http"
 	"os"
@@ -27,7 +27,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/primitive"
 
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"

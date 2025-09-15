@@ -20,9 +20,9 @@ package internal
 import (
 	"testing"
 
-	"github.com/slh92/rocketmq-admin/primitive"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 func TestMarshal2Bean(t *testing.T) {

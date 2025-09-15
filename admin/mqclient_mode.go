@@ -3,7 +3,7 @@ package admin
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/primitive"
 	"regexp"
 	"strings"
 )

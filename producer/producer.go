@@ -28,12 +28,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	errors2 "github.com/slh92/rocketmq-admin/errors"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/internal/utils"
-	"github.com/slh92/rocketmq-admin/primitive"
-	"github.com/slh92/rocketmq-admin/rlog"
+	errors2 "github.com/yj2280/rocketmq-admin/errors"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
+	"github.com/yj2280/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/rlog"
 )
 
 type defaultProducer struct {

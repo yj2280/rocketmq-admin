@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/utils"
-	"github.com/slh92/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
+	"github.com/yj2280/rocketmq-admin/primitive"
 )
 
 // WithTrace support rocketmq trace: https://github.com/apache/rocketmq/wiki/RIP-6-Message-Trace.

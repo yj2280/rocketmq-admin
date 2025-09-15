@@ -28,11 +28,11 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/slh92/rocketmq-admin/internal"
-	"github.com/slh92/rocketmq-admin/internal/remote"
-	"github.com/slh92/rocketmq-admin/internal/utils"
-	"github.com/slh92/rocketmq-admin/primitive"
-	"github.com/slh92/rocketmq-admin/rlog"
+	"github.com/yj2280/rocketmq-admin/internal"
+	"github.com/yj2280/rocketmq-admin/internal/remote"
+	"github.com/yj2280/rocketmq-admin/internal/utils"
+	"github.com/yj2280/rocketmq-admin/primitive"
+	"github.com/yj2280/rocketmq-admin/rlog"
 )
 
 type readType int
@@ -53,7 +53,7 @@ func init() {
 	}
 }
 
-//go:generate mockgen -source offset_store.go -destination mock_offset_store.go -self_package github.com/slh92/rocketmq-admin/consumer  --package consumer OffsetStore
+//go:generate mockgen -source offset_store.go -destination mock_offset_store.go -self_package github.com/yj2280/rocketmq-admin/consumer  --package consumer OffsetStore
 type OffsetStore interface {
 	persist(mqs []*primitive.MessageQueue)
 	remove(mq *primitive.MessageQueue)
