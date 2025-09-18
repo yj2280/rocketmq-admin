@@ -343,18 +343,27 @@ func (a *MqAdmin) DeleteTopic(ctx context.Context, opts ...OptionDelete) error {
 		apply(&cfg)
 	}
 	//delete topic in broker
-	if cfg.BrokerAddr == "" {
-		a.Cli.GetNameSrv().UpdateTopicRouteInfo(cfg.Topic)
-		cfg.BrokerAddr = a.Cli.GetNameSrv().FindBrokerAddrByTopic(cfg.Topic)
-	}
-
-	if _, err := a.deleteTopicInBroker(ctx, cfg.Topic, cfg.BrokerAddr); err != nil {
-		rlog.Error("delete topic in broker error", map[string]interface{}{
+	clusterInfo, err := GetClientApi(a.Cli).GetBrokerClusterInfo()
+	if err != nil {
+		rlog.Error("get cluster info error", map[string]interface{}{
 			rlog.LogKeyTopic:         cfg.Topic,
 			rlog.LogKeyBroker:        cfg.BrokerAddr,
 			rlog.LogKeyUnderlayError: err,
 		})
-		return err
+	}
+	for _, brokerAddr := range clusterInfo.BrokerAddrTable {
+		if _, err := a.deleteTopicInBroker(ctx, cfg.Topic, brokerAddr.BrokerAddresses[0]); err != nil {
+			rlog.Error("delete topic in broker error", map[string]interface{}{
+				rlog.LogKeyTopic:         cfg.Topic,
+				rlog.LogKeyBroker:        brokerAddr,
+				rlog.LogKeyUnderlayError: err,
+			})
+		} else {
+			rlog.Info("delete topic in broker success", map[string]interface{}{
+				rlog.LogKeyTopic:  cfg.Topic,
+				rlog.LogKeyBroker: brokerAddr,
+			})
+		}
 	}
 
 	//delete topic in nameserver
