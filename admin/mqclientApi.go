@@ -473,7 +473,8 @@ func (c *MqClientApi) UpdateConsumerOffset(addr string, header *internal.UpdateC
 
 func (c *MqClientApi) DeleteSubscriptionGroup(addr, group string) error {
 	header := &internal.DeleteSubscriptionGroupRequestHeader{
-		GroupName: group,
+		GroupName:    group,
+		RemoveOffset: "true",
 	}
 	cmd := remote.NewRemotingCommand(internal.ReqDeleteGroupInBroker, header, nil)
 	response, _ := c.Cli.InvokeSync(context.Background(), internal.BrokerVIPChannel(addr), cmd, 10*time.Second)

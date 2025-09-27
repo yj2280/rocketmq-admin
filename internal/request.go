@@ -462,12 +462,14 @@ func (request *DeleteTopicRequestHeader) Encode() map[string]string {
 }
 
 type DeleteSubscriptionGroupRequestHeader struct {
-	GroupName string
+	GroupName    string
+	RemoveOffset string // true or false
 }
 
 func (request *DeleteSubscriptionGroupRequestHeader) Encode() map[string]string {
 	maps := make(map[string]string)
 	maps["groupName"] = request.GroupName
+	maps["removeOffset"] = request.RemoveOffset
 
 	return maps
 }
