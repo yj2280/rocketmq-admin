@@ -2,6 +2,7 @@ package admin
 
 import (
 	"errors"
+
 	"github.com/yj2280/rocketmq-admin/internal"
 	"github.com/yj2280/rocketmq-admin/internal/utils"
 	"github.com/yj2280/rocketmq-admin/primitive"
@@ -39,7 +40,7 @@ func (a *MqAdmin) ResetOffset(request *ResetOffsetRequest) (map[string]*Consumer
 		if err != nil {
 			if primitive.IsMQClientErr(err) {
 				if (err.(*primitive.MQClientErr)).Code == 206 {
-					rollbackStats := a.ResetOffsetByTimestampOld(group, request.Topic, request.ResetTime, true)
+					rollbackStats := a.ResetOffsetByTimestampOld(request.Topic, group, request.ResetTime, true)
 					groupRollbackStat.RollbackStatsList = rollbackStats
 					groupRollbackStats[group] = groupRollbackStat
 					continue
