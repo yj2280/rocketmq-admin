@@ -486,6 +486,8 @@ func (request *ResetOffsetHeader) Encode() map[string]string {
 	maps["topic"] = request.Topic
 	maps["group"] = request.Group
 	maps["timestamp"] = strconv.FormatInt(request.Timestamp, 10)
+	maps["isForce"] = strconv.FormatBool(request.IsForce)
+
 	return maps
 }
 
