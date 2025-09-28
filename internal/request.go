@@ -85,8 +85,8 @@ type SendMessageRequestHeader struct {
 	DefaultTopicQueueNums int
 }
 
-func (request *SendMessageRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *SendMessageRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["producerGroup"] = request.ProducerGroup
 	maps["topic"] = request.Topic
 	maps["queueId"] = strconv.Itoa(request.QueueId)
@@ -118,8 +118,8 @@ type SendMessageRequestV2Header struct {
 	*SendMessageRequestHeader
 }
 
-func (request *SendMessageRequestV2Header) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *SendMessageRequestV2Header) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["a"] = request.ProducerGroup
 	maps["b"] = request.Topic
 	maps["c"] = request.DefaultTopic
@@ -136,8 +136,8 @@ func (request *SendMessageRequestV2Header) Encode() map[string]string {
 	return maps
 }
 
-func (request *EndTransactionRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *EndTransactionRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["producerGroup"] = request.ProducerGroup
 	maps["tranStateTableOffset"] = strconv.FormatInt(request.TranStateTableOffset, 10)
 	maps["commitLogOffset"] = strconv.Itoa(int(request.CommitLogOffset))
@@ -167,24 +167,24 @@ func (request *CheckTransactionStateRequestHeader) Encode() map[string]string {
 	return maps
 }
 
-func (request *CheckTransactionStateRequestHeader) Decode(properties map[string]string) {
+func (request *CheckTransactionStateRequestHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 	if v, existed := properties["tranStateTableOffset"]; existed {
-		request.TranStateTableOffset, _ = strconv.ParseInt(v, 10, 0)
+		request.TranStateTableOffset, _ = strconv.ParseInt(v.(string), 10, 0)
 	}
 	if v, existed := properties["commitLogOffset"]; existed {
-		request.CommitLogOffset, _ = strconv.ParseInt(v, 10, 0)
+		request.CommitLogOffset, _ = strconv.ParseInt(v.(string), 10, 0)
 	}
 	if v, existed := properties["msgId"]; existed {
-		request.MsgId = v
+		request.MsgId = v.(string)
 	}
 	if v, existed := properties["transactionId"]; existed {
-		request.MsgId = v
+		request.MsgId = v.(string)
 	}
 	if v, existed := properties["offsetMsgId"]; existed {
-		request.MsgId = v
+		request.MsgId = v.(string)
 	}
 }
 
@@ -198,8 +198,8 @@ type ConsumerSendMsgBackRequestHeader struct {
 	MaxReconsumeTimes int32
 }
 
-func (request *ConsumerSendMsgBackRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *ConsumerSendMsgBackRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["group"] = request.Group
 	maps["offset"] = strconv.FormatInt(request.Offset, 10)
 	maps["delayLevel"] = strconv.Itoa(request.DelayLevel)
@@ -225,8 +225,8 @@ type PullMessageRequestHeader struct {
 	ExpressionType       string
 }
 
-func (request *PullMessageRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *PullMessageRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	maps["topic"] = request.Topic
 	maps["queueId"] = fmt.Sprintf("%d", request.QueueId)
@@ -250,14 +250,14 @@ type GetConsumerConnectionListRequestHeader struct {
 	ConsumerGroup string `json:"consumerGroup"`
 }
 
-func (request *GetConsumerListRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetConsumerListRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	return maps
 }
 
-func (request *GetConsumerConnectionListRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetConsumerConnectionListRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	return maps
 }
@@ -267,8 +267,8 @@ type GetMaxOffsetRequestHeader struct {
 	QueueId int
 }
 
-func (request *GetMaxOffsetRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetMaxOffsetRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	maps["queueId"] = strconv.Itoa(request.QueueId)
 	return maps
@@ -280,8 +280,8 @@ type QueryConsumerOffsetRequestHeader struct {
 	QueueId       int
 }
 
-func (request *QueryConsumerOffsetRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *QueryConsumerOffsetRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	maps["topic"] = request.Topic
 	maps["queueId"] = strconv.Itoa(request.QueueId)
@@ -294,8 +294,8 @@ type SearchOffsetRequestHeader struct {
 	Timestamp int64
 }
 
-func (request *SearchOffsetRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *SearchOffsetRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	maps["queueId"] = strconv.Itoa(request.QueueId)
 	maps["timestamp"] = strconv.FormatInt(request.Timestamp, 10)
@@ -309,8 +309,8 @@ type UpdateConsumerOffsetRequestHeader struct {
 	CommitOffset  int64
 }
 
-func (request *UpdateConsumerOffsetRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *UpdateConsumerOffsetRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	maps["topic"] = request.Topic
 	maps["queueId"] = strconv.Itoa(request.QueueId)
@@ -322,8 +322,8 @@ type GetRouteInfoRequestHeader struct {
 	Topic string
 }
 
-func (request *GetRouteInfoRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetRouteInfoRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	return maps
 }
@@ -332,8 +332,8 @@ type GetTopicStatsInfoRequestHeader struct {
 	Topic string
 }
 
-func (request *GetTopicStatsInfoRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetTopicStatsInfoRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	return maps
 }
@@ -342,8 +342,8 @@ type QueryTopicConsumeByWhoRequestHeader struct {
 	Topic string
 }
 
-func (request *QueryTopicConsumeByWhoRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *QueryTopicConsumeByWhoRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	return maps
 }
@@ -354,28 +354,28 @@ type GetConsumerRunningInfoHeader struct {
 	jstackEnable  bool
 }
 
-func (request *GetConsumerRunningInfoHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *GetConsumerRunningInfoHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.consumerGroup
 	maps["clientId"] = request.clientID
 	maps["jstackEnable"] = strconv.FormatBool(request.jstackEnable)
 	return maps
 }
 
-func (request *GetConsumerRunningInfoHeader) Decode(properties map[string]string) {
+func (request *GetConsumerRunningInfoHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 	if v, existed := properties["consumerGroup"]; existed {
-		request.consumerGroup = v
+		request.consumerGroup = v.(string)
 	}
 
 	if v, existed := properties["clientId"]; existed {
-		request.clientID = v
+		request.clientID = v.(string)
 	}
 
 	if v, existed := properties["jstackEnable"]; existed {
-		parseBool, _ := strconv.ParseBool(v)
+		parseBool, _ := strconv.ParseBool(v.(string))
 		request.jstackEnable = parseBool
 	}
 }
@@ -388,8 +388,8 @@ type QueryMessageRequestHeader struct {
 	EndTimestamp   int64
 }
 
-func (request *QueryMessageRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *QueryMessageRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	maps["key"] = request.Key
 	maps["maxNum"] = fmt.Sprintf("%d", request.MaxNum)
@@ -407,8 +407,8 @@ type ViewMessageRequestHeader struct {
 	Offset int64
 }
 
-func (request *ViewMessageRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *ViewMessageRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["offset"] = strconv.FormatInt(request.Offset, 10)
 
 	return maps
@@ -425,8 +425,8 @@ type CreateTopicRequestHeader struct {
 	Order           bool
 }
 
-func (request *CreateTopicRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *CreateTopicRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	maps["defaultTopic"] = request.DefaultTopic
 	maps["readQueueNums"] = fmt.Sprintf("%d", request.ReadQueueNums)
@@ -443,8 +443,8 @@ type TopicListRequestHeader struct {
 	Topic string
 }
 
-func (request *TopicListRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *TopicListRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 
 	return maps
@@ -454,8 +454,8 @@ type DeleteTopicRequestHeader struct {
 	Topic string
 }
 
-func (request *DeleteTopicRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *DeleteTopicRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 
 	return maps
@@ -466,8 +466,8 @@ type DeleteSubscriptionGroupRequestHeader struct {
 	RemoveOffset string // true or false
 }
 
-func (request *DeleteSubscriptionGroupRequestHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *DeleteSubscriptionGroupRequestHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["groupName"] = request.GroupName
 	maps["removeOffset"] = request.RemoveOffset
 
@@ -481,31 +481,31 @@ type ResetOffsetHeader struct {
 	IsForce   bool
 }
 
-func (request *ResetOffsetHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *ResetOffsetHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["topic"] = request.Topic
 	maps["group"] = request.Group
 	maps["timestamp"] = strconv.FormatInt(request.Timestamp, 10)
-	maps["isForce"] = strconv.FormatBool(request.IsForce)
+	maps["isForce"] = request.IsForce
 
 	return maps
 }
 
-func (request *ResetOffsetHeader) Decode(properties map[string]string) {
+func (request *ResetOffsetHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 
 	if v, existed := properties["topic"]; existed {
-		request.Topic = v
+		request.Topic = v.(string)
 	}
 
 	if v, existed := properties["group"]; existed {
-		request.Group = v
+		request.Group = v.(string)
 	}
 
 	if v, existed := properties["timestamp"]; existed {
-		request.Timestamp, _ = strconv.ParseInt(v, 10, 0)
+		request.Timestamp, _ = strconv.ParseInt(v.(string), 10, 0)
 	}
 }
 
@@ -516,8 +516,8 @@ type ConsumeMessageDirectlyHeader struct {
 	BrokerName    string
 }
 
-func (request *ConsumeMessageDirectlyHeader) Encode() map[string]string {
-	maps := make(map[string]string)
+func (request *ConsumeMessageDirectlyHeader) Encode() map[string]interface{} {
+	maps := make(map[string]interface{})
 	maps["consumerGroup"] = request.ConsumerGroup
 	maps["clientId"] = request.ClientID
 	maps["msgId"] = request.MsgId
@@ -525,25 +525,25 @@ func (request *ConsumeMessageDirectlyHeader) Encode() map[string]string {
 	return maps
 }
 
-func (request *ConsumeMessageDirectlyHeader) Decode(properties map[string]string) {
+func (request *ConsumeMessageDirectlyHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 
 	if v, existed := properties["consumerGroup"]; existed {
-		request.ConsumerGroup = v
+		request.ConsumerGroup = v.(string)
 	}
 
 	if v, existed := properties["clientId"]; existed {
-		request.ClientID = v
+		request.ClientID = v.(string)
 	}
 
 	if v, existed := properties["msgId"]; existed {
-		request.MsgId = v
+		request.MsgId = v.(string)
 	}
 
 	if v, existed := properties["brokerName"]; existed {
-		request.BrokerName = v
+		request.BrokerName = v.(string)
 	}
 }
 
@@ -553,29 +553,29 @@ type GetConsumerStatusRequestHeader struct {
 	clientAddr string
 }
 
-func (request *GetConsumerStatusRequestHeader) Encode() map[string]string {
-	return map[string]string{
+func (request *GetConsumerStatusRequestHeader) Encode() map[string]interface{} {
+	return map[string]interface{}{
 		"topic":      request.topic,
 		"group":      request.group,
 		"clientAddr": request.clientAddr,
 	}
 }
 
-func (request *GetConsumerStatusRequestHeader) Decode(properties map[string]string) {
+func (request *GetConsumerStatusRequestHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 
 	if v, existed := properties["topic"]; existed {
-		request.topic = v
+		request.topic = v.(string)
 	}
 
 	if v, existed := properties["group"]; existed {
-		request.group = v
+		request.group = v.(string)
 	}
 
 	if v, existed := properties["clientAddr"]; existed {
-		request.clientAddr = v
+		request.clientAddr = v.(string)
 	}
 }
 
@@ -584,19 +584,19 @@ type GetConsumeStatsRequestHeader struct {
 	Topic         string
 }
 
-func (request *GetConsumeStatsRequestHeader) Encode() map[string]string {
-	return map[string]string{
+func (request *GetConsumeStatsRequestHeader) Encode() map[string]interface{} {
+	return map[string]interface{}{
 		"topic":         request.Topic,
 		"consumerGroup": request.ConsumerGroup,
 	}
 }
-func (request *GetConsumeStatsRequestHeader) Decode(properties map[string]string) {
+func (request *GetConsumeStatsRequestHeader) Decode(properties map[string]interface{}) {
 	if v, existed := properties["topic"]; existed {
-		request.Topic = v
+		request.Topic = v.(string)
 	}
 
 	if v, existed := properties["consumerGroup"]; existed {
-		request.ConsumerGroup = v
+		request.ConsumerGroup = v.(string)
 	}
 }
 
@@ -617,8 +617,8 @@ type ReplyMessageRequestHeader struct {
 	storeTimestamp        int64
 }
 
-func (request *ReplyMessageRequestHeader) Encode() map[string]string {
-	return map[string]string{
+func (request *ReplyMessageRequestHeader) Encode() map[string]interface{} {
+	return map[string]interface{}{
 		"producerGroup":         request.producerGroup,
 		"topic":                 request.topic,
 		"defaultTopic":          request.defaultTopic,
@@ -635,63 +635,63 @@ func (request *ReplyMessageRequestHeader) Encode() map[string]string {
 	}
 }
 
-func (request *ReplyMessageRequestHeader) Decode(properties map[string]string) {
+func (request *ReplyMessageRequestHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 
 	if v, existed := properties["producerGroup"]; existed {
-		request.producerGroup = v
+		request.producerGroup = v.(string)
 	}
 
 	if v, existed := properties["topic"]; existed {
-		request.topic = v
+		request.topic = v.(string)
 	}
 
 	if v, existed := properties["defaultTopic"]; existed {
-		request.defaultTopic = v
+		request.defaultTopic = v.(string)
 	}
 
 	if v, existed := properties["defaultTopicQueueNums"]; existed {
-		request.defaultTopicQueueNums, _ = strconv.Atoi(v)
+		request.defaultTopicQueueNums, _ = strconv.Atoi(v.(string))
 	}
 
 	if v, existed := properties["queueId"]; existed {
-		request.queueId, _ = strconv.Atoi(v)
+		request.queueId, _ = strconv.Atoi(v.(string))
 	}
 
 	if v, existed := properties["sysFlag"]; existed {
-		request.sysFlag, _ = strconv.Atoi(v)
+		request.sysFlag, _ = strconv.Atoi(v.(string))
 	}
 
 	if v, existed := properties["bornTimestamp"]; existed {
-		request.bornTimestamp, _ = strconv.ParseInt(v, 10, 0)
+		request.bornTimestamp, _ = strconv.ParseInt(v.(string), 10, 0)
 	}
 
 	if v, existed := properties["flag"]; existed {
-		tmpFlag, _ := strconv.ParseInt(v, 10, 32)
+		tmpFlag, _ := strconv.ParseInt(v.(string), 10, 32)
 		request.flag = int32(tmpFlag)
 	}
 
 	if v, existed := properties["properties"]; existed {
-		request.properties = v
+		request.properties = v.(string)
 	}
 
 	if v, existed := properties["reconsumeTimes"]; existed {
-		tmpReconsumeTimes, _ := strconv.ParseInt(v, 10, 32)
+		tmpReconsumeTimes, _ := strconv.ParseInt(v.(string), 10, 32)
 		request.reconsumeTimes = int32(tmpReconsumeTimes)
 	}
 
 	if v, existed := properties["bornHost"]; existed {
-		request.bornHost = v
+		request.bornHost = v.(string)
 	}
 
 	if v, existed := properties["storeHost"]; existed {
-		request.storeHost = v
+		request.storeHost = v.(string)
 	}
 
 	if v, existed := properties["storeTimestamp"]; existed {
-		request.storeTimestamp, _ = strconv.ParseInt(v, 10, 0)
+		request.storeTimestamp, _ = strconv.ParseInt(v.(string), 10, 0)
 	}
 }
 
@@ -701,22 +701,22 @@ type GetConsumerRunningInfoRequestHeader struct {
 	JstackEnable  bool
 }
 
-func (request *GetConsumerRunningInfoRequestHeader) Encode() map[string]string {
-	return map[string]string{
+func (request *GetConsumerRunningInfoRequestHeader) Encode() map[string]interface{} {
+	return map[string]interface{}{
 		"clientId":      request.ClientId,
 		"consumerGroup": request.ConsumerGroup,
 		"jstackEnable":  strconv.FormatBool(request.JstackEnable),
 	}
 }
-func (request *GetConsumerRunningInfoRequestHeader) Decode(properties map[string]string) {
+func (request *GetConsumerRunningInfoRequestHeader) Decode(properties map[string]interface{}) {
 	if v, existed := properties["clientId"]; existed {
-		request.ClientId = v
+		request.ClientId = v.(string)
 	}
 
 	if v, existed := properties["consumerGroup"]; existed {
-		request.ConsumerGroup = v
+		request.ConsumerGroup = v.(string)
 	}
 	if v, existed := properties["jstackEnable"]; existed {
-		request.JstackEnable, _ = strconv.ParseBool(v)
+		request.JstackEnable, _ = strconv.ParseBool(v.(string))
 	}
 }

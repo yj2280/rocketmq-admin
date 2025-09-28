@@ -335,7 +335,7 @@ func (c *MqClientApi) GetMaxOffset(addr, topic string, queueId int) (int64, erro
 	if response.Code != 0 {
 		return -1, primitive.NewMQClientErr(response.Code, response.Remark)
 	}
-	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
+	return strconv.ParseInt(response.ExtFields["offset"].(string), 10, 64)
 }
 
 func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp int64) (int64, error) {
@@ -360,7 +360,7 @@ func (c *MqClientApi) SearchOffset(addr, topic string, queueId int, timestamp in
 	if response.Code != 0 {
 		return -1, primitive.NewMQBrokerErr(response.Code, response.Remark)
 	}
-	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
+	return strconv.ParseInt(response.ExtFields["offset"].(string), 10, 64)
 }
 
 func (c *MqClientApi) GetTopicStatsInfo(addr, topic string) (*TopicStatsTable, error) {

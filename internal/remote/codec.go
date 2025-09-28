@@ -76,18 +76,18 @@ func (lc LanguageCode) String() string {
 }
 
 type RemotingCommand struct {
-	Code      int16             `json:"code"`
-	Language  LanguageCode      `json:"language"`
-	Version   int16             `json:"version"`
-	Opaque    int32             `json:"opaque"`
-	Flag      int32             `json:"flag"`
-	Remark    string            `json:"remark"`
-	ExtFields map[string]string `json:"extFields"`
-	Body      []byte            `json:"-"`
+	Code      int16                  `json:"code"`
+	Language  LanguageCode           `json:"language"`
+	Version   int16                  `json:"version"`
+	Opaque    int32                  `json:"opaque"`
+	Flag      int32                  `json:"flag"`
+	Remark    string                 `json:"remark"`
+	ExtFields map[string]interface{} `json:"extFields"`
+	Body      []byte                 `json:"-"`
 }
 
 type CustomHeader interface {
-	Encode() map[string]string
+	Encode() map[string]interface{}
 }
 
 func NewRemotingCommand(code int16, header CustomHeader, body []byte) *RemotingCommand {
@@ -97,7 +97,7 @@ func NewRemotingCommand(code int16, header CustomHeader, body []byte) *RemotingC
 		Opaque:    atomic.AddInt32(&opaque, 1),
 		Body:      body,
 		Language:  _Go,
-		ExtFields: make(map[string]string),
+		ExtFields: make(map[string]interface{}),
 	}
 
 	if header != nil {
@@ -286,7 +286,7 @@ func (c *jsonCodec) encodeHeader(command *RemotingCommand) ([]byte, error) {
 
 func (c *jsonCodec) decodeHeader(header []byte) (*RemotingCommand, error) {
 	command := &RemotingCommand{}
-	command.ExtFields = make(map[string]string)
+	command.ExtFields = make(map[string]interface{})
 	command.Body = make([]byte, 0)
 	err := jsoniter.Unmarshal(header, command)
 	if err != nil {
@@ -385,7 +385,7 @@ func (c *rmqCodec) encodeHeader(command *RemotingCommand) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (c *rmqCodec) encodeMaps(maps map[string]string) ([]byte, error) {
+func (c *rmqCodec) encodeMaps(maps map[string]interface{}) ([]byte, error) {
 	if maps == nil || len(maps) == 0 {
 		return []byte{}, nil
 	}
@@ -401,11 +401,11 @@ func (c *rmqCodec) encodeMaps(maps map[string]string) ([]byte, error) {
 			return nil, err
 		}
 
-		err = binary.Write(extFieldsBuf, binary.BigEndian, int32(len(value)))
+		err = binary.Write(extFieldsBuf, binary.BigEndian, int32(len(value.(string))))
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(extFieldsBuf, binary.BigEndian, []byte(value))
+		err = binary.Write(extFieldsBuf, binary.BigEndian, []byte(value.(string)))
 		if err != nil {
 			return nil, err
 		}
@@ -479,7 +479,7 @@ func (c *rmqCodec) decodeHeader(data []byte) (*RemotingCommand, error) {
 			return nil, err
 		}
 
-		command.ExtFields = make(map[string]string)
+		command.ExtFields = make(map[string]interface{})
 		buf := bytes.NewBuffer(extFieldsData)
 		var (
 			kLen int16

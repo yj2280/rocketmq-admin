@@ -412,7 +412,7 @@ func (r *remoteBrokerOffsetStore) fetchConsumeOffsetFromBroker(group string, mq 
 		return -2, fmt.Errorf("broker response code: %d, remarks: %s", res.Code, res.Remark)
 	}
 
-	off, err := strconv.ParseInt(res.ExtFields["offset"], 10, 64)
+	off, err := strconv.ParseInt(res.ExtFields["offset"].(string), 10, 64)
 
 	if err != nil {
 		return -1, err

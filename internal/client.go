@@ -755,20 +755,20 @@ func (c *rmqClient) ProcessSendResponse(brokerName string, cmd *remote.RemotingC
 		regionId = defaultTraceRegionID
 	}
 
-	qId, _ := strconv.Atoi(cmd.ExtFields["queueId"])
-	off, _ := strconv.ParseInt(cmd.ExtFields["queueOffset"], 10, 64)
+	qId, _ := strconv.Atoi(cmd.ExtFields["queueId"].(string))
+	off, _ := strconv.ParseInt(cmd.ExtFields["queueOffset"].(string), 10, 64)
 
 	resp.Status = status
 	resp.MsgID = uniqueMsgId
-	resp.OffsetMsgID = cmd.ExtFields["msgId"]
+	resp.OffsetMsgID = cmd.ExtFields["msgId"].(string)
 	resp.MessageQueue = &primitive.MessageQueue{
 		Topic:      msgs[0].Topic,
 		BrokerName: brokerName,
 		QueueId:    qId,
 	}
 	resp.QueueOffset = off
-	resp.TransactionID = cmd.ExtFields["transactionId"]
-	resp.RegionID = regionId
+	resp.TransactionID = cmd.ExtFields["transactionId"].(string)
+	resp.RegionID = regionId.(string)
 	resp.TraceOn = trace != "" && trace != _TraceOff
 	return nil
 }
@@ -812,22 +812,22 @@ func (c *rmqClient) processPullResponse(response *remote.RemotingCommand) (*prim
 func (c *rmqClient) decodeCommandCustomHeader(pr *primitive.PullResult, cmd *remote.RemotingCommand) {
 	v, exist := cmd.ExtFields["maxOffset"]
 	if exist {
-		pr.MaxOffset, _ = strconv.ParseInt(v, 10, 64)
+		pr.MaxOffset, _ = strconv.ParseInt(v.(string), 10, 64)
 	}
 
 	v, exist = cmd.ExtFields["minOffset"]
 	if exist {
-		pr.MinOffset, _ = strconv.ParseInt(v, 10, 64)
+		pr.MinOffset, _ = strconv.ParseInt(v.(string), 10, 64)
 	}
 
 	v, exist = cmd.ExtFields["nextBeginOffset"]
 	if exist {
-		pr.NextBeginOffset, _ = strconv.ParseInt(v, 10, 64)
+		pr.NextBeginOffset, _ = strconv.ParseInt(v.(string), 10, 64)
 	}
 
 	v, exist = cmd.ExtFields["suggestWhichBrokerId"]
 	if exist {
-		pr.SuggestWhichBrokerId, _ = strconv.ParseInt(v, 10, 64)
+		pr.SuggestWhichBrokerId, _ = strconv.ParseInt(v.(string), 10, 64)
 	}
 }
 

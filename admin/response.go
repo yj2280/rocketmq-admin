@@ -18,11 +18,12 @@ limitations under the License.
 package admin
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/yj2280/rocketmq-admin/internal"
 	"github.com/yj2280/rocketmq-admin/internal/remote"
 	"github.com/yj2280/rocketmq-admin/primitive"
-	"math"
-	"strconv"
 )
 
 type ConsumeType string
@@ -193,15 +194,15 @@ type QueryMessageResponseHeader struct {
 	IndexLastUpdatePhyoffset int64 `json:"indexLastUpdatePhyoffset"`
 }
 
-func (request *QueryMessageResponseHeader) Decode(properties map[string]string) {
+func (request *QueryMessageResponseHeader) Decode(properties map[string]interface{}) {
 	if len(properties) == 0 {
 		return
 	}
 	if v, existed := properties["indexLastUpdateTimestamp"]; existed {
-		request.IndexLastUpdateTimestamp, _ = strconv.ParseInt(v, 32, 0)
+		request.IndexLastUpdateTimestamp, _ = strconv.ParseInt(v.(string), 32, 0)
 	}
 
 	if v, existed := properties["indexLastUpdatePhyoffset"]; existed {
-		request.IndexLastUpdatePhyoffset, _ = strconv.ParseInt(v, 32, 0)
+		request.IndexLastUpdatePhyoffset, _ = strconv.ParseInt(v.(string), 32, 0)
 	}
 }

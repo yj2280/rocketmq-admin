@@ -995,7 +995,7 @@ func (dc *defaultConsumer) queryMaxOffset(mq *primitive.MessageQueue) (int64, er
 		return -1, err
 	}
 
-	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
+	return strconv.ParseInt(response.ExtFields["offset"].(string), 10, 64)
 }
 
 func (dc *defaultConsumer) queryOffset(mq *primitive.MessageQueue) int64 {
@@ -1026,7 +1026,7 @@ func (dc *defaultConsumer) searchOffsetByTimestamp(mq *primitive.MessageQueue, t
 		return -1, err
 	}
 
-	return strconv.ParseInt(response.ExtFields["offset"], 10, 64)
+	return strconv.ParseInt(response.ExtFields["offset"].(string), 10, 64)
 }
 
 func buildSubscriptionData(topic string, selector MessageSelector) *internal.SubscriptionData {

@@ -48,7 +48,7 @@ func ACLInterceptor(credentials primitive.Credentials) primitive.Interceptor {
 			m[securityToken] = credentials.SecurityToken
 		}
 		for k, v := range cmd.ExtFields {
-			m[k] = v
+			m[k] = v.(string)
 			order = append(order, k)
 		}
 		sort.Slice(order, func(i, j int) bool {
